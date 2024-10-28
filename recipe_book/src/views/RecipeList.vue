@@ -12,6 +12,7 @@
               :prepTime="item.prepTime"
               :ingredients="item.ingredients"
               :servings="item.servings"
+              :calories="item.kkal"
               :is-expanded="expandedCardId === item.id"
               @toggle-card="toggleCard(item.id)"
           />
@@ -20,15 +21,61 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { ref, onMounted, computed } from 'vue';
+import {useStore} from 'vuex'
 import RecipeCard from '@/components/AppRecipeCard.vue';
+import axios from 'axios';
 
-export default defineComponent({
-  setup() {
-    
+export default {
+  name: 'App',
+  components: {
+    'recipe-card': RecipeCard,
   },
-  components:{ RecipeCard }
-})
+  setup() {
+    const expandedCardId = ref(null);
+    const store = useStore();
+
+    const recipes = computed(() => store.getters['recipe/allRecipes']);
+   
+    const toggleCard = (id) => {
+      expandedCardId.value = expandedCardId.value === id ? null : id;
+    };
+
+    // const getRecipesFromDatabase = async () => {
+    //   try {
+    //     const { data } = await axios.get(
+    //       'https://recipe-book-8f83f-default-rtdb.firebaseio.com/recipes.json'
+    //     );
+    //     const fetchedRecipes = Object.keys(data).map((key) => ({
+    //       id: key,
+    //       title: data[key].title,
+    //       description: data[key].description,
+    //       prepTime: data[key].prepTime,
+    //       servings: data[key].servings,
+    //       image: data[key].image || null,
+    //       ingredients: data[key].ingredients || [],
+    //     }));
+
+    //     recipes.value = [...recipes.value, ...fetchedRecipes];
+    //   } catch (error) {
+    //     console.error('Ошибка при получении данных из базы данных:', error);
+    //   }
+    // };
+
+    onMounted(() => {
+      // Получаем рецепты при загрузке компонента
+      // getRecipesFromDatabase();
+      // store.dispatch('recipe/fetchRecipes');
+    });
+
+    return {
+      expandedCardId,
+      recipes,
+      toggleCard
+      // getRecipesFromDatabase,
+    };
+  },
+};
 </script>
 
 <style>

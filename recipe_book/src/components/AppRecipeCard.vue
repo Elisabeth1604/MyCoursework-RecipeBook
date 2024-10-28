@@ -1,5 +1,5 @@
 <template>
-    <div :class="['recipe-card', { expanded: isExpanded }]" >
+    <div :class="['recipe-card', { expanded: isExpanded }]" @click="handleCardClick" title="При нажатии откроется страница рецепта">
         <img class="recipe-card-img" :src="recipeImage" alt="Фото рецепта" />
         <div class="recipe-header">
           <div class="kkal" title="Количество калорий на 100 грамм">
@@ -15,7 +15,7 @@
         <p>{{ recipeDescription }}</p>
   
         <div class="card-footer">
-          <app-button v-if="!isExpanded" @click="toggleCard" buttonClass="ingredients-button" small>Состав</app-button>
+          <app-button v-if="!isExpanded" @click.stop="toggleCard" buttonClass="ingredients-button" title="Развернуть карточку" small>Состав</app-button>
           <button class="favorite-btn" v-if="!isExpanded" title="Добавить рецепт в избранное">
             <img class="favourites-img" :src="require('@/assets/icons/heart.png')" alt="Добавить в избранное" />
           </button>
@@ -25,11 +25,11 @@
           <div class="ingredients">
             <h4>Ингредиенты:</h4>
             <ul>
-              <li v-for="ingredient in ingredients" :key="ingredient">{{ ingredient }}</li>
+              <li v-for="ingredient in ingredients" :key="ingredient.name">{{ ingredient.name }}</li>
             </ul>
           </div>
-          <app-button @click="viewRecipe(recipeId)" buttonClass="recipe-card-button">Показать рецепт</app-button>
-          <app-button @click="toggleCard" buttonClass="recipe-card-button" small>Свернуть</app-button>
+          <app-button @click.stop="viewRecipe(recipeId)" buttonClass="recipe-card-button">Показать рецепт</app-button>
+          <app-button @click.stop="toggleCard" buttonClass="recipe-card-button" small>Свернуть</app-button>
         </div>
       </div>
   </template>
@@ -45,7 +45,8 @@
       recipeImage: String,
       prepTime: Number,
       servings: Number,
-      ingredients: Array,
+      calories: Number,
+      ingredients: Object,
       isExpanded: Boolean, // Принимаем состояние карточки от родителя
     },
     data() {
@@ -60,10 +61,15 @@
     methods: {
       viewRecipe(recipeId) {
         console.log(`Recipe ID: ${recipeId}`)
+        this.$router.push({ name: 'RecipePage', params: { id: recipeId } });
       },
       toggleCard() {
         // Эмитим событие для родителя
         this.$emit('toggle-card')
+      },
+      handleCardClick() {
+        // Вызов viewRecipe только при клике вне кнопок
+        this.viewRecipe(this.recipeId);
       },
     },
      

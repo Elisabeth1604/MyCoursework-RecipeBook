@@ -1,5 +1,6 @@
 import { createStore, createLogger } from 'vuex'
 import auth from './modules/auth.module'
+import recipe from './modules/recipe.module';
 // import { db, storage } from '../services/firebase'; // Импортируйте ваше подключение к Firebase
 
 const plugins = []
@@ -12,7 +13,7 @@ export default createStore({
   plugins,
   state() {
     return {
-      recipes: [] // Здесь храните ваши рецепты
+      recipes: [] // Здесь хранить рецепты
     };
   },
   getters: {
@@ -46,6 +47,6 @@ export default createStore({
     },
   },
   modules: {
-    auth
+    auth, recipe
   }
 })

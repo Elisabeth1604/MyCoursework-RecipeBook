@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import Auth from '@/views/AuthModal.vue';
+import Auth from '@/modal/AuthModal.vue';
 
 export default{
     setup() {

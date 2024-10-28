@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '../store/store'
 import RecipeList from '../views/RecipeList.vue'
-import AddRecipe from '../views/AddRecipe.vue'
-import Reg from '../views/Reg.vue'
-import Auth from '../views/AuthModal.vue'
+import RecipePage from '@/views/RecipePage.vue'
+
 
 const routes = [
   { // Доступен без авторизации (главная)
@@ -31,7 +30,15 @@ const routes = [
     meta:{
       layout: 'reg' // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'reg'
     }
-  }
+  },
+  { // Доступен без авторизации (страница рецепта)
+    path: '/recipe-page/:id',
+    name: 'RecipePage',
+    component: RecipePage,
+    meta:{
+      layout: 'recipe-page' // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'recipe-page'
+    }
+  },
 ]
 
 const router = createRouter({
@@ -47,7 +54,7 @@ router.beforeEach((to, from, next) => {
     next() // Если пользователь авторизован, переходим на новую страницу
   } else if(requireAuth && !store.getters['auth/isAuthenticated']){
     alert('Вы должны быть авторизованы, чтобы получить доступ к этой странице.');
-    next(false) // Прерываем переход на страницу
+    next(true) // Прерываем переход на страницу
     
   } else{
     next()

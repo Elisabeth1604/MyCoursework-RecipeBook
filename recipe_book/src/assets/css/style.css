@@ -6,3 +6,7 @@ body {
     background-color: #f5f5f5;
     box-sizing: border-box; /* Это помогает учесть отступы и поля в общей ширине элементов */
 }
+
+[v-cloak] {
+    display: none;
+  }

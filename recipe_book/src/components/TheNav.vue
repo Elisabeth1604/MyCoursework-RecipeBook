@@ -54,7 +54,7 @@ import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import AppButton from './AppButton.vue';
 import {useRouter} from 'vue-router'
 import {useStore} from 'vuex'
-import AuthModal from '@/views/AuthModal.vue';
+import AuthModal from '@/modal/AuthModal.vue';
 
 export default defineComponent({
     setup() {
