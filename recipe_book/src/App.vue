@@ -18,6 +18,9 @@ import AuthLayout from './layout/AuthLayout.vue';
 import AddRecipeLayout from './layout/AddRecipeLayout.vue';
 import RegLayout from './layout/RegLayout.vue';
 import RecipePageLayout from './layout/RecipePageLayout.vue';
+import FavouriteLayout from './layout/FavouriteLayout.vue';
+import ProfileLayout from './layout/ProfileLayout.vue';
+import MyRecipesLayout from './layout/MyRecipesLayout.vue';
 
 export default{
   setup() {
@@ -35,7 +38,11 @@ export default{
     'auth-layout': AuthLayout, 
     'add-recipe-layout': AddRecipeLayout, 
     'reg-layout': RegLayout,
-    'recipe-page-layout': RecipePageLayout}
+    'recipe-page-layout': RecipePageLayout,
+    'favourite-layout': FavouriteLayout,
+    'profile-layout' : ProfileLayout,
+    'my-recipes-layout' : MyRecipesLayout
+  }
 }
 </script>
 

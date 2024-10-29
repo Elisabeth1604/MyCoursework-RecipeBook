@@ -1,13 +1,17 @@
 <template>    
     <div class="step">
         <label class="label-step">Шаг {{ index + 1 }}</label>
-        <img :src="step.image" alt="Фото шага" class="step-image" />
+         <!-- Модальное окно для увеличенного изображения шага -->
+         <ImageModal :imageUrl="selectedImage" :visible="isModalVisible" @close="isModalVisible = false" />
+        <!-- Изображение шага с обработчиком клика -->
+        <img :src="step.image" alt="Фото шага {{ index + 1 }}" class="step-image" @click="openImage(step.image)" />
         <p class="step-description">{{ step.description }}</p>
     </div>
 </template>
 
 <script>
-import { defineComponent} from 'vue'
+import { defineComponent, ref} from 'vue'
+import ImageModal from '@/modal/ImageModal.vue';
 
 export default defineComponent({    
     props: {
@@ -21,8 +25,22 @@ export default defineComponent({
         }
     },
     setup() {
-        
+        const isModalVisible = ref(false); // управляет видимостью модального окна
+        const selectedImage = ref(''); // хранит URL выбранного изображения
+
+        // Открытие изображения в модальном окне
+        const openImage = (imageUrl) => {
+            selectedImage.value = imageUrl;
+            isModalVisible.value = true;
+        };
+
+        return {
+            isModalVisible,
+            selectedImage,
+            openImage
+        };
     },
+    components:{ImageModal}
 })
 </script>
 
@@ -43,6 +61,7 @@ export default defineComponent({
     .step-image {
         width: 100%;
         border-radius: 8px;
+        cursor: pointer;
     }
     
     /* Описание шага приготовления */

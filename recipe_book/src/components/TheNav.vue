@@ -23,14 +23,14 @@
                 >Войти</app-button>
                 <!-- Выпадающее меню -->
                 <ul class="dropdown-menu" v-if="isAuth">
-                    <li><router-link to="/profile">
-                        <img src="..\assets\icons\profile.png" alt="Иконка профиля" class="dropdown-menu-icon">Мой профиль</router-link></li>
+                    <li><a @click="handleProfile">
+                        <img src="..\assets\icons\profile.png" alt="Иконка профиля" class="dropdown-menu-icon">Мой профиль</a></li>
                     <hr>
-                    <li><router-link to="/my-recipes">
-                        <img src="..\assets\icons\food.png" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</router-link></li>
+                    <li><a @click="handleMyRecipes">
+                        <img src="..\assets\icons\food.png" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</a></li>
                     <hr>
-                    <li><router-link to="/favourites">
-                        <img src="..\assets\icons\heart (1).png" alt="Иконка избранного" class="dropdown-menu-icon">Избранное</router-link></li>
+                    <li><a @click="handleFavourite">
+                        <img src="..\assets\icons\heart (1).png" alt="Иконка избранного" class="dropdown-menu-icon">Избранное</a></li>
                     <hr>
                     <li><a @click.prevent="logout">
                         <img src="..\assets\icons\door.png" alt="Иконка выйти" class="dropdown-menu-icon">Выйти</a></li>
@@ -62,7 +62,7 @@ export default defineComponent({
         const store = useStore()
 
         const isMenuOpen = ref(false) // Управляем открытием выпадающего меню
-        const isAuth = ref(false) // Управляем аутентификацией
+        const isAuth = ref(true) // Управляем аутентификацией
         const isLoginVisible = ref(false) // Управляем показом модального окна входа
 
         const viewCategories = () => {
@@ -89,7 +89,7 @@ export default defineComponent({
             console.log(isLoginVisible.value);
         }
       
-        const handleAddRecipe = () => {  // Нажатие на кнопку Добавить рецепт
+        const handleAddRecipe = () => {  // Обработчик нажатия на кнопку Добавить рецепт
             console.log('Добавить рецепт нажат'); // Добавьте это сообщение
             // if (isAuth.value) {
                 router.push('/add-recipe');
@@ -99,6 +99,21 @@ export default defineComponent({
             //     console.log('Переход не выполнен');
             // }
         };
+
+        const handleFavourite = () => { // Обработчик нажатия Избранное
+            console.log('Нажали перейти в избранное');
+            router.push('/favourite');
+        }
+
+        const handleProfile = () => { // Обработчик нажатия Профиль
+            console.log('Нажали перейти в профиль');
+            router.push('/profile');
+        }
+
+        const handleMyRecipes = () => { // Обработчик нажатия Мои рецепты
+            console.log('Нажали перейти в мои рецепты');
+            router.push('/my-recipes');
+        }
                 
         return{
             logout:() => {
@@ -112,7 +127,10 @@ export default defineComponent({
             handleAddRecipe,
             toggleMenu,
             viewCategories,
-            viewProfile
+            viewProfile,
+            handleFavourite,
+            handleProfile,
+            handleMyRecipes
         }
     },
     components:{ AppButton, 'auth-modal':AuthModal}
@@ -120,7 +138,7 @@ export default defineComponent({
 })
 </script>
 
-<style>
+<style scoped>
 /* Основные стили */
 .nav-container {
     display: flex;
@@ -167,10 +185,15 @@ export default defineComponent({
   text-decoration: none;
   color: #333;
   display: block;
+  cursor: pointer;
 }
 
 .dropdown-menu li a:hover {
   color:#FF9973; /*Цвет текста при наведении*/
+}
+
+.dropdown-menu li a:active {
+  color:#ff5722; /*Цвет текста при нажатии*/
 }
 
 .dropdown-menu-icon { /* Для изображений иконок */
@@ -197,6 +220,7 @@ hr{
     cursor: pointer;
     height: 40px;
 }
+
 
 @media (max-width: 956px) {
     .nav-buttons {

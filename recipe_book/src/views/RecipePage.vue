@@ -1,4 +1,8 @@
 <template>
+<div>
+    <!-- Модальное окно для изображения -->
+    <ImageModal :imageUrl="selectedImage" :visible="isModalVisible" @close="isModalVisible = false" />    
+    
     <div class="recipe-page" v-if="recipe">
       <!-- Название рецепта -->
       <h1 class="recipe-title">{{ recipe.title }}</h1>      
@@ -7,11 +11,11 @@
       <!-- Автор рецепта -->
         <div class="author">
             <img src="..\assets\images\person.jpg" alt="Фото автора рецепта">
-            <p class="recipe-author">Автор: {{ recipe.author }}</p>
+            <p class="recipe-author" >Автор: <a href="#" title="Перейти в профиль автора">{{ recipe.author }}</a></p>
         </div>  
       <!-- Блок с фото и количеством порций -->
       <div class="recipe-header">
-            <img :src="recipe.image" alt="Фото рецепта" class="recipe-image" />
+            <img :src="recipe.image" alt="Фото рецепта" class="recipe-image"  @click="openImage(recipe.image)"/>
             <div class="right-section">
                 <div class="servings-ingred-header">
                     <h2>Ингредиенты:</h2>               
@@ -50,8 +54,11 @@
                 </div>
             </div>            
       </div>  
-      <!-- Время приготовления -->
-      <p class="prep-time">Общее время приготовления: {{ recipe.prepTime }} минут</p>
+      <!-- Время приготовления -->       
+        <div class="prep">
+            <img alt="Иконка времени приготовления" :src="require('@/assets/icons/clock (2).png')">
+            <p class="prep-time">Общее время приготовления: {{ recipe.prepTime }} минут</p>
+        </div>      
       <hr>  
       <!-- Шаги приготовления (отдельный компонент) -->
       <h2>Шаги приготовления:</h2>
@@ -65,15 +72,17 @@
       </div>
     </div>
     <div v-else>
-        <p>Рецепт не найден или загружается...</p>
+        <p>Рецепт не найден...</p>
   </div>
+</div>
   </template>
   
   <script>
-  import { computed, onMounted } from 'vue';
+  import { computed, onMounted, ref } from 'vue';
   import { useStore } from 'vuex';
   import { useRoute } from 'vue-router';
   import AppRecipeStep from '@/components/AppRecipeStep.vue';
+  import ImageModal from '@/modal/ImageModal.vue';
   
   export default {
     name: 'RecipePage',
@@ -109,6 +118,14 @@
         store.dispatch('recipe/updateServings', currentServings.value + amount);
       };
       
+    const isModalVisible = ref(false);
+    const selectedImage = ref('');
+
+    const openImage = (imageUrl) => {
+      selectedImage.value = imageUrl;
+      isModalVisible.value = true;
+    };
+
     onMounted(async () => {
         if (!store.state.recipe.recipes.length) {
             await store.dispatch('recipe/fetchRecipes');
@@ -122,17 +139,20 @@
         recipe,
         currentServings,
         adjustedIngredients,
-        changeServings
+        changeServings,
+        isModalVisible,
+        selectedImage,
+        openImage
       };
     },
-    components: { AppRecipeStep }
+    components: { AppRecipeStep, ImageModal }
   };
   </script>
   
   <style scoped>
     /* Основной контейнер страницы рецепта */
     .recipe-page {
-        width: 75%;
+        width: 80%;
         margin: 0 auto;
         padding: 20px;
     }
@@ -155,7 +175,27 @@
     .recipe-author {
         text-align: right;
         font-style: italic;
-        margin-bottom: 20px;
+        text-decoration: none;
+        color: #333;
+    }
+
+     /* Ссылка на профиль автора рецепта */
+    .recipe-author a {
+        text-align: right;
+        font-style: italic;
+        border-bottom: 1.5px dashed #333;
+        text-decoration: none;
+        color: #333;
+    }
+
+    .recipe-author a:hover {      
+        border-bottom: 1.5px dashed #FF9973;  
+        color: #FF9973;
+    }
+
+    .recipe-author a:active {      
+        border-bottom: 1.5px dashed #ff5722;  
+        color: #ff5722;
     }
 
     /* Класс для фото + имя */
@@ -185,11 +225,11 @@
     
     /* Стиль для изображения рецепта */
     .recipe-image {
-        /* width: 100%; */
-        /* height: 330px; */
+        max-height: 450px;
         object-fit: cover; /* Часть картинки, которая не поместилась, обрежется без искажений*/
-        width: 47%; /* Такую часть ширины контейнера займёт */
+        width: 49%; /* Такую часть ширины контейнера займёт */
         border-radius: 8px;
+        cursor: pointer;
     }
 
     /* Блок для Ингредиенты и Порции */
@@ -231,7 +271,7 @@
     .right-section{
         display: flex;
         flex-direction: column;
-        width: 48%;
+        width: 47%;
     }
     
     /* Убираем маркеры списка для ингредиентов */
@@ -282,9 +322,18 @@
     }
   
     /* Время приготовления */
+    .prep{
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
     .prep-time {
         font-weight: bold;
-        margin-bottom: 20px;
+    }
+    .prep img{
+        max-height: 30px;
+        padding-right: 5px;
     }
     
     /* Блок для шагов приготовления */

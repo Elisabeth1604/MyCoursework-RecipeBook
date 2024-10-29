@@ -27,7 +27,12 @@ export default {
 
     actions:{
         async login({commit}, payload){ // Здесь будем делать запрос к базе данных, когда что-то прилетит с сервера, будем вызывать мутацию
-            commit('setToken', 'TEST TOKEN') // Временный метод, вызывающий мутацию
+            try {
+                commit('setToken', 'TEST TOKEN') // Временный метод, вызывающий мутацию
+            } catch (e) {
+                throw new Error // Если войти не удалось
+            }
+
         }
     },
 

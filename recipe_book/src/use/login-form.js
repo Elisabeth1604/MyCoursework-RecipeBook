@@ -33,10 +33,13 @@ export function UseLoginForm(){
 
     // Обработка формы
     const onSubmit = handleSubmit(async values =>{
-        console.log('Form:', values)
-        await store.dispatch('auth/login', values) // Метод login находится в actions, поэтому вызываем dispatch
-        router.push('/') // Чтобы после авторизации приложение пересылало на страницу какую либо (добавить какую!!! пока на главную пусть)
-        
+        try{
+            console.log('Form:', values)
+            await store.dispatch('auth/login', values) // Метод login находится в actions, поэтому вызываем dispatch
+            router.push('/') // Чтобы после авторизации приложение пересылало на страницу какую либо (добавить какую!!! пока на главную пусть)
+        } catch(e){
+            // Чтобы не происходило редиректа (не изменялся url), если введен неверный пароль
+        }
     })
 
     return{

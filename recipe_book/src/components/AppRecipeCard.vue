@@ -16,7 +16,7 @@
   
         <div class="card-footer">
           <app-button v-if="!isExpanded" @click.stop="toggleCard" buttonClass="ingredients-button" title="Развернуть карточку" small>Состав</app-button>
-          <button class="favorite-btn" v-if="!isExpanded" title="Добавить рецепт в избранное">
+          <button class="favorite-btn" @click.stop="addToFavourites" v-if="!isExpanded" title="Добавить рецепт в избранное">
             <img class="favourites-img" :src="require('@/assets/icons/heart.png')" alt="Добавить в избранное" />
           </button>
         </div>
@@ -71,6 +71,9 @@
         // Вызов viewRecipe только при клике вне кнопок
         this.viewRecipe(this.recipeId);
       },
+      addToFavourites() {
+        
+      }
     },
      
   }
