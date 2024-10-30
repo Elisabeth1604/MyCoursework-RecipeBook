@@ -1,6 +1,5 @@
 <template>
-  <div class="recipe-list">
-      <h2>Последние рецепты</h2>
+  <app-page title="Последние рецепты"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
       <div class="recipes" ref="recipeGrid">
           <recipe-card
               v-for="item in recipes"
@@ -17,19 +16,21 @@
               @toggle-card="toggleCard(item.id)"
           />
       </div>
-  </div>
+  </app-page>
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
 import {useStore} from 'vuex'
 import RecipeCard from '@/components/AppRecipeCard.vue';
+import AppPage from '@/components/ui/AppPage.vue';
 import axios from 'axios';
 
 export default {
   name: 'App',
   components: {
     'recipe-card': RecipeCard,
+     AppPage
   },
   setup() {
     const expandedCardId = ref(null);

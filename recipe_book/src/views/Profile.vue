@@ -1,23 +1,17 @@
 <template>
-    <div class="profile-page">
-        <h2>Профиль</h2>
-    </div>
+    <app-page title="Профиль"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
+
+    </app-page>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
+import AppPage from '@/components/ui/AppPage.vue';
 
 export default defineComponent({
     setup() {
         
     },
+    components:{AppPage}
 })
 </script>
-
-<style scoped>
-.profile-page{
-    padding: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-</style>

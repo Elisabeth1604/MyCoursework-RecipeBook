@@ -1,8 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, linkActiveClass, linkExactActiveClass } from 'vue-router'
 import store from '../store/store'
 import RecipeList from '../views/RecipeList.vue'
-import Favourite from '@/views/Favourite.vue'
-
 
 const routes = [
   { // Доступен без авторизации (главная)
@@ -74,7 +72,9 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     // Чтобы при переходе на другую страницу вернуться в начало прокрутки
     return { top: 0 };
-},
+  },
+  linkActiveClass: 'active',
+  linkExactActiveClass: 'active'
 })
 
 // Вызывается перед загрузкой страницы

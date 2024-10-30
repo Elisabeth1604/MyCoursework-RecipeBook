@@ -1,19 +1,20 @@
 <template>
-    <div class="favourite-page">
-        <h2>Рецепты, которые вы сохранили</h2>
+    <app-page title="Сохраненные рецепты"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
         <div class="favourite-recipes">
 
         </div>
-    </div>
+    </app-page>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
+import AppPage from '@/components/ui/AppPage.vue';
 
 export default defineComponent({
     setup() {
         
     },
+    components: {AppPage}
 })
 </script>
 

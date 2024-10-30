@@ -1,5 +1,5 @@
 <template>
-    <div class="form-group">
+    <div :class="[name==='ingredient' || name==='quantity' ? 'form-group-ingredients' : 'form-group']"> <!--Добавила динамический класс, чтобы у полей ввода ингредиента и его количества был класс не form-group-->
         <label :for="iD">{{label}}</label> <!-- Привязываем метку (label) к полю ввода по атрибуту 'for' с динамическим значением iD -->
         <!-- Если передан инпут для названия рецепта или для mail, делаем его активным автоматически с помощью кастомной 
          директивы v-focus -->
@@ -19,7 +19,7 @@
         :placeholder="placeholder"
         :value="value"
         autocomplete="off"
-        :min="type==='number' ? '0' :'null'"
+        :min="type==='number' ? '1' :'null'"
         @input="change"
         @blur="handleBlur">        
         

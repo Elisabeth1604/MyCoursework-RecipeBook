@@ -14,7 +14,7 @@
             >Категории</app-button>
             <div class="profile-menu-container">
                 <app-button v-if="isAuth"
-                    @action="viewProfile"
+                    @action="handleProfile"
                     buttonClass="button"            
                 >Профиль</app-button>
                 <app-button v-else
