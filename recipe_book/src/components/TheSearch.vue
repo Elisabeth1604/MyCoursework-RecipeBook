@@ -50,21 +50,46 @@ export default defineComponent({
 }
 
 @media (max-width: 618px) {
-  .search-form input {
+    .search-form {
+        height: 30px;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+    .search-form input {
       width: 200px; 
-  }
+      height: 10px;
+    }
 }
 
-@media (max-width: 506px) {
+@media (max-width: 567px) {
   .search-form input {
-      width: 150px; 
+    width: 150px;
   }
 }
 
 @media (max-width: 480px) {
   .search-form input {
-      width: 100%; /* Занимает всю ширину родительского элемента */
-      padding: 6px; /* Минимальный отступ */
+    width: 100px; /* Занимает всю ширину родительского элемента */
+    font-size: 12px;    
   }
+
+  .search-form{
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+
+  .search-button{
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+    .search-form input {
+        width: 80px; /* Занимает всю ширину родительского элемента */
+        font-size: 11px;    
+    }
+    .search-button{
+        font-size: 11px;
+    }
 }
 </style>

@@ -33,4 +33,10 @@ footer a {
 footer a:hover {
     text-decoration: underline; /* Подчеркивание при наведении */
 }
+
+@media (max-width: 480px) {
+    p{
+        font-size: 12px;
+    }
+}
 </style>

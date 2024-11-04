@@ -35,8 +35,8 @@
                     <span class="ingredient-name">{{ ingredient.name }}</span>                    
                     <div class="ingredient-divider"></div> <!-- Линия между названием и количеством -->
                     <div class="ingredient-details">
-                        <span class="ingredient-amount">{{ ingredient.amount }}</span>
-                        <select v-model="ingredient.unit" class="ingredient-unit">
+                        <span class="ingredient-amount">{{ ingredient.amount }} {{ ingredient.unit }}</span>
+                        <!-- <select v-model="ingredient.unit" class="ingredient-unit">
                         <option value="граммы">гр</option>
                         <option value="килограммы">кг</option>
                         <option value="литры">л</option>
@@ -47,7 +47,7 @@
                         <option value="шт">шт</option>
                         <option value="зубчики">зубч.</option>
                         <option value="щепотки">щепотка</option>
-                        </select>
+                        </select> -->
                     </div>
                     </li>
                 </ul>

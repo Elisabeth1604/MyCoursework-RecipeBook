@@ -133,7 +133,27 @@
                       <span class="time-label">минут</span>
                     </div>
                   </div>
-                </div>              
+                </div>
+                
+                <!-- Выпадающий список выбора категории блюда -->
+                <div class="form-group">
+                <label class="categories-select-label">Категория блюда</label>
+                <select v-model="recipe.category" class="category-select" >
+                  <option disabled value="">Выберите категорию</option>
+                  <option value="завтраки">Завтраки</option>
+                  <option value="закуски">Закуски</option>
+                  <option value="напитки">Напитки</option>
+                  <option value="основные блюда">Основные блюда</option>
+                  <option value="паста и пицца">Паста и пицца</option>
+                  <option value="ризотто">Ризотто</option>
+                  <option value="салаты">Салаты</option>
+                  <option value="соусы и маринады">Соусы и маринады</option>
+                  <option value="супы">Супы</option>
+                  <option value="сэндвичи">Сэндвичи</option>
+                  <option value="выпечка и десерты">Выпечка и десерты</option>
+                  <option value="заготовки">Заготовки</option>
+                </select>
+                </div>     
 
                 <!-- Поле для ШАГОВ ПРИГОТОВЛЕНИЯ-->
                 <label class="label-steps">Шаги приготовления</label>
@@ -189,6 +209,7 @@ export default defineComponent({
         { name: '', quantity: '', unit: '' }
       ],
       servings: '0',
+      category: '',
       steps: [{ description: '', image: '' }] // Шаги приготовления
     });
 
@@ -333,10 +354,20 @@ export default defineComponent({
   margin-top: 15px;
 }
 
-/* Классы для поля ввода названия ингредиента, количества и единиц измерения */
+/* Классы для поля ввода названия ингредиента, количества, единиц измерения и категории */
 .ingredient-input, .quantity-input, .unit-select {
   height: 30px;  
   margin-right: 10px;
+  box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.category-select{
+  width: 40%;
+  height: 35px;  
+  margin-right: 10px;
+  margin-bottom: 10px;
   box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
   border-radius: 5px;
   border: 1px solid #ccc;

@@ -31,4 +31,11 @@ header {
     padding: 20px;
     color: white;
 }
+/* Более узкие экраны (мобильные) */
+@media (max-width: 480px) {
+    header {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
 </style>

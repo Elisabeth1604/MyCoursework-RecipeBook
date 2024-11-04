@@ -26,10 +26,15 @@ export default {
     },
 
     actions:{
-        async login({commit}, payload){ // Здесь будем делать запрос к базе данных, когда что-то прилетит с сервера, будем вызывать мутацию
+        async login({commit, dispatch}, payload){ // Здесь будем делать запрос к базе данных, когда что-то прилетит с сервера, будем вызывать мутацию
             try {
                 commit('setToken', 'TEST TOKEN') // Временный метод, вызывающий мутацию
+                commit('clearMessage', null, {root : true})
             } catch (e) {
+                dispatch('setMessage', {
+                    value: error(e.responce.data.error.message),
+                    type: error
+                }, {root : true})
                 throw new Error // Если войти не удалось
             }
 

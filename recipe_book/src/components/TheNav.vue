@@ -252,4 +252,11 @@ hr{
         align-items: center;
     }
 }
+
+@media (max-width: 768px){
+    .menu-icon {
+        height: 35px;
+        width: 35px;
+    }
+}
 </style>

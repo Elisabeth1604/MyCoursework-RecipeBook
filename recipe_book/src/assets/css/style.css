@@ -7,6 +7,10 @@ body {
     box-sizing: border-box; /* Это помогает учесть отступы и поля в общей ширине элементов */
 }
 
+h3, h2{
+    color: #333;
+}
+
 [v-cloak] {
     display: none;
   }
