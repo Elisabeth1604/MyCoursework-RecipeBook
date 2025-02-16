@@ -1,0 +1,47 @@
+# ====== Общие файлы ОС ======
+.DS_Store
+Thumbs.db
+
+# ====== Файлы и папки Node.js (Vue.js) ======
+node_modules/
+dist/
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ====== Файлы и папки Python (Django) ======
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+venv/
+backend/venv/
+*.log
+.env
+*.env
+
+# ====== PhpStorm IDE ======
+.idea/
+workspace.xml
+tasks.xml
+shelf/
+
+# ====== PyCharm (если используется) ======
+*.iml
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ====== Логи, временные файлы и кэш ======
+*.log
+*.bak
+*.swp
+*.swo
