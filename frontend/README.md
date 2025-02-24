@@ -1,4 +1,4 @@
-# recipe_book
+# recipe_book_frontend
 
 ## Project setup
 ```

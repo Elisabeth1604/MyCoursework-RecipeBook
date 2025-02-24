@@ -77,26 +77,6 @@ class AuthUserUserPermissions(models.Model):
         unique_together = (('user', 'permission'),)
 
 
-class Categories(models.Model):
-    names = models.CharField(max_length=45)
-
-    class Meta:
-        managed = False
-        db_table = 'categories'
-
-
-class Comments(models.Model):
-    comment = models.TextField(blank=True, null=True)
-    created_at = models.DateField(blank=True, null=True)
-    users_id = models.IntegerField()
-    recipes_id = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'comments'
-        unique_together = (('id', 'recipes_id', 'users_id'),)
-
-
 class DjangoAdminLog(models.Model):
     action_time = models.DateTimeField()
     object_id = models.TextField(blank=True, null=True)
@@ -142,110 +122,130 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 
-class Favourites(models.Model):
-    users_id = models.IntegerField()
-    recipes_id = models.IntegerField()
+class Category(models.Model):
+    category_name = models.CharField(max_length=45, unique=True)
 
     class Meta:
-        managed = False
-        db_table = 'favourites'
-        unique_together = (('id', 'recipes_id', 'users_id'),)
+        db_table = 'categories'
 
+    def __str__(self):
+        return self.category_name
+
+class Ingredient(models.Model):
+    ingredient_name = models.CharField(max_length=45, unique=True)
+    calories = models.DecimalField(max_digits=10, decimal_places=2, blank=True, default=0)
+    proteins = models.DecimalField(max_digits=10, decimal_places=2, blank=True, default=0)
+    fats = models.DecimalField(max_digits=10, decimal_places=2, blank=True, default=0)
+    carbohydrates = models.DecimalField(max_digits=10, decimal_places=2, blank=True, default=0)
+
+    class Meta:
+        db_table = 'ingredients'
+
+    def __str__(self):
+        return self.ingredient_name
+
+class Unit(models.Model):
+    unit_name = models.CharField(max_length=45, unique=True)
+
+    class Meta:
+        db_table = 'units'
+
+    def __str__(self):
+        return self.unit_name
 
 class IngredientUnits(models.Model):
     id = models.AutoField(primary_key=True)  # Новый суррогатный ключ
-    ingredient_id = models.IntegerField()
-    unit_id = models.IntegerField()
+    ingredient= models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="ingredient_units")
+    unit= models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="ingredient_units")
     conversion_to_grams = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'ingredient_units'
-        unique_together = (('ingredient_id', 'unit_id'),)
+        unique_together = (('ingredient', 'unit'),)
 
-
-
-class Ingredients(models.Model):
-    names = models.CharField(max_length=45, blank=True, null=True)
-    calories = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    proteins = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    fats = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    carbohydrates = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+class User(models.Model):
+    username = models.CharField(max_length=45, unique=True)
+    email = models.CharField(max_length=100, unique=True)
+    password = models.CharField(max_length=100)
+    created_at = models.DateField(auto_now_add=True)
 
     class Meta:
-        managed = False
-        db_table = 'ingredients'
+        db_table = 'users'
 
+    def __str__(self):
+        return self.username
 
-class RecipeSteps(models.Model):
-    description = models.TextField(blank=True, null=True)
+class Recipe(models.Model):
+    recipe_title = models.CharField(max_length=255, unique=True)
+    description = models.TextField()
+    servings = models.IntegerField()
+    prep_time_min = models.IntegerField()
+    prep_time_hour = models.IntegerField(blank=True, default=0)
+    main_photo = models.CharField(max_length=255)
+    created_at = models.DateField(auto_now_add=True)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="recipes")
+
+    class Meta:
+        db_table = 'recipes'
+
+    def __str__(self):
+        return self.recipe_title
+
+class RecipeStep(models.Model):
+    id = models.AutoField(primary_key=True)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="steps")
+    description = models.TextField()
     photo = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'recipe_steps'
 
 
-class Recipes(models.Model):
-    titles = models.CharField(max_length=255, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    servings = models.IntegerField(blank=True, null=True)
-    prep_time_min = models.IntegerField(blank=True, null=True)
-    prep_time_hour = models.IntegerField(blank=True, null=True)
-    main_photo = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateField(blank=True, null=True)
-    users_id = models.IntegerField()
-    categories_id = models.IntegerField()
+# Связь Рецепты - Ингредиенты (многие ко многим)
+class RecipeIngredient(models.Model):
+    id = models.AutoField(primary_key=True)
+    quantity = models.IntegerField()
+    unit =  models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
 
     class Meta:
-        managed = False
-        db_table = 'recipes'
-
-
-class RecipesHasIngredients(models.Model):
-    quantity = models.IntegerField(blank=True, null=True)
-    units_id = models.IntegerField()
-    recipes_id = models.IntegerField()
-    ingredients_id = models.IntegerField()
-
-    class Meta:
-        managed = False
         db_table = 'recipes_has_ingredients'
+        unique_together = (('recipe', 'ingredient'),)
+
+    def __str__(self):
+        return f"{self.recipe.recipe_title} - {self.ingredient.ingredient_name}: {self.quantity}"
 
 
-class StepRecipe(models.Model):
-    recipe_steps_id = models.IntegerField()
-    recipes_id = models.IntegerField()
-    id = models.IntegerField(primary_key=True)
-
-    class Meta:
-        managed = False
-        db_table = 'step_recipe'
-
-
-class Subscriptions(models.Model):
-    subscriber_id = models.IntegerField()
-    target_id = models.IntegerField()
+class Subscription(models.Model):
+    subscriber = models.ForeignKey(User, related_name="subscriptions", on_delete=models.CASCADE)
+    target = models.ForeignKey(User, related_name="followers", on_delete=models.CASCADE)
 
     class Meta:
-        managed = False
         db_table = 'subscriptions'
+        unique_together = (('subscriber', 'target'),)
 
 
-class Units(models.Model):
-    names = models.CharField(max_length=45, blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'units'
-
-
-class Users(models.Model):
-    username = models.CharField(max_length=45)
-    email = models.CharField(max_length=100)
-    password = models.CharField(max_length=100)
-    creaded_at = models.DateField()
+class Comment(models.Model):
+    id = models.AutoField(primary_key=True)
+    text = models.TextField()
+    created_at = models.DateField(auto_now_add=True)
+    user= models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="comments")
 
     class Meta:
-        managed = False
-        db_table = 'users'
+        db_table = 'comments'
+
+    def __str__(self):
+        return f"Комментарий {self.user.username} к {self.recipe.recipe_title}"
+
+
+class Favourite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favourites")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="favourites")
+
+    class Meta:
+        db_table = 'favourites'
+        unique_together = (('recipe', 'user'),)
