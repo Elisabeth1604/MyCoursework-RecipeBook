@@ -1,4 +1,34 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost/api/token/';
 const TOKEN_KEY = 'jwt-token'
+
+import { jwtDecode } from "jwt-decode";
+import store from "@/store/store";
+import router from "@/router/router";
+
+// Функция для периодической проверки токена
+function startTokenRefresh(store) {
+    setInterval(async () => {
+        const token = store.state.token;
+
+        if (token) {
+            const decoded = jwtDecode(token);
+            const now = Math.floor(Date.now() / 1000);
+
+            if (decoded.exp - now < 300) { // Если до истечения < 5 минут
+                console.log("Обновляем токен...");
+                await store.dispatch("auth/refreshToken");
+            }
+        }
+    }, 300000); // Проверять раз в 5 минут
+}
+
+// Запуск обновления токена при инициализации store
+export function initializeAuthStore(store) {
+    startTokenRefresh(store);
+}
+
 
 export default {
     namespaced: true, // Чтобы названия экшенов были локальными, а не глобальными
@@ -7,7 +37,7 @@ export default {
         return{
             token: localStorage.getItem(TOKEN_KEY), // По токену будем определять, авторизован ли человек, причем начальное значение указываем не null, а получаем из localStorage
             // чтобы при обновлении страницы авторизация не сбрасывалась
-            // isLoginVisible: false
+            isLoginVisible: false
         }
     },
 
@@ -16,28 +46,109 @@ export default {
             state.token = token
             localStorage.setItem(TOKEN_KEY, token)
         },
-        logout(state){ // Для выхода, не обязательно делать это асинхронно, т к нет запроса на сервер
+        logout(state){
             state.token = null
             localStorage.removeItem(TOKEN_KEY) // Удаляем из localStorage
         },
         // setLoginVisible(state, isVisible) {
         //     state.isLoginVisible = isVisible;
         // }
+        showLoginModal(state) {
+            state.isLoginVisible = true;
+        },
+        hideLoginModal(state) {
+            state.isLoginVisible = false;
+        }
     },
 
-    actions:{
-        async login({commit, dispatch}, payload){ // Здесь будем делать запрос к базе данных, когда что-то прилетит с сервера, будем вызывать мутацию
+    actions: {
+        async login({ commit }, { username, password }) {
             try {
-                commit('setToken', 'TEST TOKEN') // Временный метод, вызывающий мутацию
-                commit('clearMessage', null, {root : true})
-            } catch (e) {
-                dispatch('setMessage', {
-                    value: error(e.responce.data.error.message),
-                    type: error
-                }, {root : true})
-                throw new Error // Если войти не удалось
-            }
+                console.log('Отправляем данные:', { username, password });
+                const response = await axios.post(API_URL, {
+                    username: username,
+                    password: password
+                });
 
+                commit('setToken', response.data.access); // Сохраняем access-токен
+                axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+                store.dispatch("setMessage", { type: "success", text: "Добро пожаловать!", position: "app-message" }, { root: true });
+                commit('hideLoginModal'); // Закрыть модальное окно входа
+
+            } catch (error) {
+                console.error('Ошибка авторизации:', error);
+                store.dispatch("setMessage", { type: "error", text: "Ошибка в имени пользователя или пароле!", position: "app-message" }, { root: true });
+                throw new Error('Ошибка авторизации');
+            }
+        },
+
+        async refreshToken({ commit }) {
+            try {
+                const response = await axios.post(`${API_URL}refresh/`, {}, { withCredentials: true });
+
+                commit("setToken", response.data.access);
+                axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.access}`;
+            } catch (error) {
+                console.error("Ошибка обновления токена:", error);
+                commit("logout");
+            }
+        },
+
+        async logout({ commit }) {
+            try {
+                await axios.post(`${API_URL}logout/`, {}, { withCredentials: true });
+                commit("logout");
+                delete axios.defaults.headers.common["Authorization"];
+                store.dispatch("setMessage", { type: "success", text: "Вы вышли из профиля!", position: "app-message" }, { root: true });
+            } catch (error) {
+                console.error("Ошибка при выходе:", error);
+            }
+        },
+
+        async register({ dispatch }, { username, email, password, confirmPassword }) {
+            try {
+                const response = await axios.post('http://localhost/api/register/', {
+                    username,
+                    email,
+                    password,
+                    password2: confirmPassword
+                }, { withCredentials: true });
+
+                store.dispatch("setMessage", {
+                    type: "success",
+                    text: "Вы успешно зарегистрированы!",
+                    position: "app-message",
+                }, { root: true });
+
+                // Ждем 500 мс перед входом, чтобы сообщение успело появиться
+                await new Promise(resolve => setTimeout(resolve, 700));
+
+                // После успешной регистрации сразу выполняем вход
+                await dispatch("login", { username, password });
+
+                router.push('/')
+
+                return response.data;
+            } catch (error) {
+                console.error("Ошибка регистрации:", error.response?.data || error.message);
+
+                let errorMessage = "Ошибка регистрации";
+                if (error.response?.data) {
+                    if (error.response.data.password) {
+                        errorMessage = error.response.data.password.join(" "); // Склеиваем массив ошибок
+                    } else if (error.response.data.email) {
+                        errorMessage = error.response.data.email;
+                    } else if (error.response.data.username) {
+                        errorMessage = error.response.data.username;
+                    }
+                }
+                store.dispatch("setMessage", {
+                    type: "error",
+                    text: errorMessage,
+                    position: "app-message",
+                }, { root: true });
+                throw error;
+            }
         }
     },
 
@@ -45,9 +156,9 @@ export default {
         token(state){
             return state.token
         },
-        isAuntheticated(_, getters){
+        isAuthenticated(_, getters){
             return !!getters.token // Двойным отрицанием приводим токен к булевому значению, чтобы в зависимости от его значения возвращать состояние isAuthenticated
         }
     }
-    
+
 }

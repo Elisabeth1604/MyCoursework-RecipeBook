@@ -27,7 +27,6 @@ export default{
     const route = useRoute() // Текущий роут
     const layout = computed(() => route.meta.layout)
     
-    
     return{
       layout//Возвращаем значение layout из meta для доступа в шаблоне
     }    
@@ -46,6 +45,3 @@ export default{
 }
 </script>
 
-
-<style>
-</style>

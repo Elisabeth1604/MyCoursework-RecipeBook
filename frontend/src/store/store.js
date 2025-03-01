@@ -2,7 +2,6 @@ import { createStore, createLogger } from 'vuex'
 import auth from './modules/auth.module'
 import recipe from './modules/recipe.module';
 import user from './modules/user.module'
-// import { db, storage } from '../services/firebase'; // Импортируйте ваше подключение к Firebase
 
 const plugins = []
 
@@ -10,9 +9,12 @@ if(process.env.NODE_ENV === 'development'){ // Если мы находимся 
   plugins.push(createLogger()) // Добавляем плагин, чтобы следить, что находится со стором
 }
 
+let messageTimeoutId = null;
+let fadeTimeoutId = null;
+
 export default createStore({
   plugins,
-  state() {
+  state(){
     return {
       recipes: [], // Здесь хранить рецепты
       message: null, // Сообщения об ошибках, успехе или предупреждении
@@ -35,9 +37,9 @@ export default createStore({
       state.recipes.push(recipe);
     },
 
-    setMessage(state, message){
-      state.message = message;
-      state.showMessage = true; // Устанавливаем флаг для отображения сообщения
+    setMessage(state, { type, text, position = "default", fadingOut = false }) {
+      state.message = { type, text, position, fadingOut };
+      state.showMessage = true;
     },
 
     clearMessage(state){ //Очищение сообщения
@@ -65,12 +67,41 @@ export default createStore({
       }
     },
 
-    setMessage({commit}, message){
-      commit('setMessage', message)
-      setTimeout(() => {
-        commit('clearMessage') //Закрываем сообщение автоматически через 5 секунд
-      }, 5000)
-    }
+    setMessage({ commit }, message) {
+      // Очищаем предыдущие таймауты, если они есть
+      if (messageTimeoutId) clearTimeout(messageTimeoutId);
+      if (fadeTimeoutId) clearTimeout(fadeTimeoutId);
+
+      // Сразу устанавливаем сообщение без fadingOut
+      commit("setMessage", { ...message, fadingOut: false });
+
+      // Через 4.5 сек запускаем анимацию исчезновения
+      messageTimeoutId = setTimeout(() => {
+        commit("setMessage", { ...message, fadingOut: true });
+        // Через 0.5 сек полностью скрываем сообщение
+        fadeTimeoutId = setTimeout(() => {
+          commit("clearMessage");
+        }, 500);
+      }, 4500);
+    },
+    closeMessage({ commit, state }) {
+      // Отменяем запланированные таймауты
+      if (messageTimeoutId) {
+        clearTimeout(messageTimeoutId);
+        messageTimeoutId = null;
+      }
+      if (fadeTimeoutId) {
+        clearTimeout(fadeTimeoutId);
+        fadeTimeoutId = null;
+      }
+      // Если сообщение всё ещё отображается, запускаем анимацию исчезновения
+      if (state.showMessage && state.message && !state.message.fadingOut) {
+        commit("setMessage", { ...state.message, fadingOut: true });
+        fadeTimeoutId = setTimeout(() => {
+          commit("clearMessage");
+        }, 500);
+      }
+    },
   },
   modules: {
     auth, recipe, user

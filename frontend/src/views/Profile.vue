@@ -2,13 +2,32 @@
     <app-page title="Профиль"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
       <div class="profile">
         <section class="profile-info">
-        <div class="profile-photo-container">
-          <img src="..\assets\images\person.jpg" alt="Фото пользователя" class="avatar" />
+        <div class="profile-photo-container" >
+          <!-- Аватарка с анимацией загрузки -->
+          <div class="avatar-wrapper" v-if="isUserLoaded">
+            <!-- Основное изображение -->
+            <img
+                v-if="user.avatar && !avatarError"
+                :src="`${mediaUrl}${user.avatar}`"
+                alt="Фото пользователя"
+                class="avatar"
+                :class="{ 'hidden': !avatarLoaded }"
+                @error="handleAvatarError"
+            >
+
+            <!-- Дефолтное изображение (появляется, если нет аватарки или ошибка) -->
+            <img
+                v-else
+                :src="require('@/assets/icons/profile.png')"
+                alt="Дефолтное фото"
+                class="avatar default-avatar"
+            >
+          </div>
         </div>
         <div class="details">
-            <p><strong>Имя:</strong> {{ user.name }}</p>
-            <p><strong>Email:</strong> {{ user.email }}</p>
-            <p>Дата регистрации: 01.01.01</p>
+            <p><strong>Имя:</strong> {{ user.username ? user.username : 'Загрузка...' }}</p>
+            <p><strong>Email:</strong> {{ user.email ? user.email : 'Загрузка...' }}</p>
+          <p><strong>Дата регистрации:</strong> {{ formattedDate }}</p>
             <app-button v-show="!isEditing"
             @click="editProfile"
             button-class="edit-profile"
@@ -25,6 +44,7 @@
               iD="name"
               type="text"
               input-class="edit-profile-input"
+              v-model="updatedUsername"
                       
               placeholder="Введите новое имя пользователя"
               required
@@ -36,6 +56,7 @@
               iD="email"
               type="text"
               input-class="edit-profile-input"
+              v-model="updatedEmail"
                       
               placeholder="Введите новый адрес электронной почты"
               required
@@ -47,8 +68,10 @@
               iD="image"
               type="file"
               input-class="add-recipe-form"
+              @change="handleAvatarChange"
               required
             ></app-input>
+            <img v-if="updatedAvatar" :src="previewAvatar" class="avatar-preview" />
 
             <h3>Изменить пароль</h3>
 
@@ -56,8 +79,9 @@
               label="Старый пароль"
               name="old_password"
               iD="old_password"
-              type="text"
+              type="password"
               input-class="edit-profile-input"
+              v-model="oldPassword"
                       
               placeholder="Введите старый пароль"
               required
@@ -67,8 +91,9 @@
               label="Новый пароль"
               name="new_password"
               iD="new_password"
-              type="text"
+              type="password"
               input-class="edit-profile-input"
+              v-model="newPassword"
                       
               placeholder="Введите новый пароль"
               required
@@ -78,8 +103,9 @@
               label="Подтверждение пароля"
               name="confirm_password"
               iD="confirm_password"
-              type="text"
+              type="password"
               input-class="edit-profile-input"
+              v-model="confirmPassword"
                       
               placeholder="Введите пароль еще раз"
               required
@@ -101,7 +127,7 @@
 </template>
 
 <script>
-import { defineComponent, computed, ref } from 'vue'
+import {defineComponent, computed, ref, onMounted} from 'vue'
 import AppPage from '@/components/ui/AppPage.vue';
 import { useStore } from 'vuex';
 import AppRecipeCard from '@/components/AppRecipeCard.vue';
@@ -113,26 +139,99 @@ export default defineComponent({
     setup() {
     const store = useStore();
 
+    const user = computed(() => store.getters['user/user']);
+
+    const updatedUsername = ref(user.value?.username || "");
+    const updatedEmail = ref(user.value?.email || "");
+    const updatedAvatar = ref(null);
+
+    const oldPassword = ref("");
+    const newPassword = ref("");
+    const confirmPassword = ref("");
+
     const isEditing = ref(false); // Флаг для формы редактирования профиля
     const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
 
-    const user = computed(() => store.state.user);
     const userRecipes = computed(() => store.getters['recipe/getUserRecipes'](user.value.id));
 
     const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
 
-    const editProfile = () => {
-      // Здесь можно добавить логику для редактирования профиля      
-      isEditing.value = true;
-    };    
+    const previewAvatar = ref(null);
 
-    const savedEdits = () => {
-      isSaving.value = true // Флаг для сообщения, что идет сохранение
-      setTimeout(() => {
+    const avatarLoaded = ref(false);
+    const avatarError = ref(false);
+
+    const isUserLoaded = ref(false);
+
+      const handleAvatarLoad = () => {
+        setTimeout(() => {
+          avatarLoaded.value = true;
+        }, 100); // небольшая задержка для плавности
+      };
+
+    const handleAvatarError = () => {
+      avatarError.value = true;
+    };
+
+    const mediaUrl = ref('http://127.0.0.1:8000/');
+    const handleAvatarChange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        if (previewAvatar.value) {
+          URL.revokeObjectURL(previewAvatar.value); // Освобождаем старый объект
+        }
+        updatedAvatar.value = file;
+        previewAvatar.value = URL.createObjectURL(file);
+      }
+    };
+
+      onMounted(async () => {
+
+        await store.dispatch('user/fetchUser'); // Загружаем пользователя при монтировании
+
+        updatedUsername.value = user.value?.username || ""; // Обновляем updatedUsername
+        updatedEmail.value = user.value?.email || "";       // Обновляем updatedEmail
+
+        isUserLoaded.value = true;
+      });
+
+    const editProfile = () => {
+      isEditing.value = true;
+    };
+
+    const savedEdits = async () => {
+      try {
+        isSaving.value = true; // Показываем сообщение "Сохраняем..."
+
+        const formData = new FormData();
+        formData.append("username", updatedUsername.value);
+        formData.append("email", updatedEmail.value);
+
+        if (updatedAvatar.value) {
+          formData.append("avatar", updatedAvatar.value);
+        }
+
+        await store.dispatch("user/updateUser", formData);
+        await store.dispatch("user/fetchUser"); // Чтобы сразу обновились данные
+
+        // Успешное обновление
         isEditing.value = false;
-        isSaving.value = false;
-        store.dispatch('setMessage', { type: 'success', text: 'Изменения сохранены' });
-      }, 3000); // 3000 миллисекунд = 3 секунды, через 3 секунды форма закроется и появится сообщение "Изменения сохранены"
+
+        // Сбрасываем значения полей
+        updatedUsername.value = "";
+        updatedEmail.value = "";
+        updatedAvatar.value = null;
+        previewAvatar.value = null;
+
+        store.dispatch("setMessage", { type: "success", text: "Изменения сохранены", position: "app-message-profile",
+          fadingOut: false }, { root: true });
+
+      } catch (error) {
+        console.error("Ошибка обновления профиля:", error);
+        store.dispatch("setMessage", { type: "error", text: "Ошибка при сохранении профиля", position: "app-message-profile" }, { root: true });
+      } finally {
+        isSaving.value = false; // В любом случае скрываем индикатор загрузки
+      }
     };
 
     const openRecipe = (recipeId) => {
@@ -142,15 +241,36 @@ export default defineComponent({
 
     return {
       user,
+      updatedUsername,
+      updatedEmail,
+      updatedAvatar,
+      previewAvatar,
       userRecipes,
       editProfile,
       openRecipe,
       savedEdits,
       isEditing,
       isSaving,
-      showMessage
+      showMessage,
+      handleAvatarChange,
+      mediaUrl,
+      avatarLoaded,
+      avatarError,
+      handleAvatarLoad,
+      handleAvatarError,
+      isUserLoaded,
+      oldPassword,
+      newPassword,
+      confirmPassword,
     };
     },
+    computed: {
+      formattedDate() {
+        if (!this.user || !this.user.date_joined) return 'Загрузка...';
+        return new Date(this.user.date_joined).toLocaleDateString('ru-RU');
+      }
+    },
+
     components:{AppPage, AppRecipeCard, AppButton, AppInput, AppMessage}
 })
 </script>
@@ -205,12 +325,39 @@ export default defineComponent({
   margin: 0;
 }
 
+.avatar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden {
+  opacity: 0;
+}
+
 .avatar {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 10%;
   object-fit: cover;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.default-avatar {
+  opacity: 1 !important;
+}
+
+.avatar-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 10px;
 }
 
 .details{

@@ -1,14 +1,14 @@
 <template>
     <div :class="[name==='ingredient' || name==='quantity' ? 'form-group-ingredients' : 'form-group']"> <!--Добавила динамический класс, чтобы у полей ввода ингредиента и его количества был класс не form-group-->
-        <label :for="iD">{{label}}</label> <!-- Привязываем метку (label) к полю ввода по атрибуту 'for' с динамическим значением iD -->
+        <label v-if="label !== '' && iD !== 'uname' && iD !== 'password'" :for="iD">{{label}}</label> <!-- Привязываем метку (label) к полю ввода по атрибуту 'for' с динамическим значением iD -->
         <!-- Если передан инпут для названия рецепта или для mail, делаем его активным автоматически с помощью кастомной 
          директивы v-focus -->
          <!--Если есть ошибка, обводим инпут красным, т е присваиваем динамическому классу класс invalid-->
-        <input v-if="name==='title' || name==='mail' || name==='name'" v-focus
+        <input v-if="name==='title' || name==='username' || name==='name'" v-focus
         :class="[error ? 'invalid' : inputClass]" 
         :type="type" :id="iD" :name="name" 
         :placeholder="placeholder"
-        :value="value"
+        :value="modelValue"
         autocomplete="off"
         @input="change"
         @blur="handleBlur">        
@@ -17,7 +17,7 @@
         <input v-else :class="[error ? 'invalid' : inputClass]"
         :type="type" :id="iD" :name="name" 
         :placeholder="placeholder"
-        :value="value"
+        :value="modelValue"
         autocomplete="off"
         :min="type==='number' ? '1' :'null'"
         @input="change"
@@ -33,7 +33,7 @@ import focusDirective from '@/directives/focusDirective';
 
 export default {
     // Компонент может вызывать событие update:value
-    emits:['update:value', 'blur'],
+    emits:['update:modelValue', 'blur'],
     props: {
         label: String,
         name: String,
@@ -42,7 +42,7 @@ export default {
             type:String,
             default:''
         },
-        value: String,
+        modelValue: String,
         inputClass:{
             type: String,
             default:''
@@ -57,7 +57,7 @@ export default {
     },
     methods: {
         change(event){
-            this.$emit('update:value', event.target.value) // Эмитим обновление value, т е
+            this.$emit('update:modelValue', event.target.value) // Эмитим обновление value, т е
             //обновляем значение в родительском компоненте при изменении данных в дочернем компоненте
         },
         handleBlur() {
@@ -76,10 +76,9 @@ export default {
     box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 2px solid darkred;
     border-radius: 5px;
-    border-color: darkred;
-    border-width: 1.5px;
+
 }
 
 small {

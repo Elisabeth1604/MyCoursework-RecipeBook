@@ -1,6 +1,6 @@
 <template>
     <!-- Основной контейнер для уведомления -->
-    <div :class="[position, messageClass]" v-if="showMessage && message">
+    <div :class="[position, messageClass, message.fadingOut ? 'fade-out' : 'fade-in']" v-if="showMessage && message&& message.position === position">
       <!-- Контейнер для содержимого уведомления -->
       <div class="message-content">
         <!-- Иконка уведомления -->
@@ -10,7 +10,7 @@
         <!-- Текст уведомления -->
         <p class="message-text">{{ message.text }}</p>
         <!-- Кнопка закрытия уведомления -->
-        <span class="close-button" @click="close">&times;</span>
+        <span class="close-button" @click="closeMessage">&times;</span>
       </div>
     </div>
   </template>
@@ -40,7 +40,7 @@ export default {
       return {
         'error': type === 'error',
         'success': type === 'success',
-        'warning': type === 'warning',
+        'warning': type === 'warning'
       };
     });
 
@@ -48,6 +48,9 @@ export default {
       success: 'Успешно!',
       error: 'Ошибка!',
       warning: 'Внимание!'
+    };
+    const closeMessage = () => {
+      store.dispatch('closeMessage', null, { root: true });
     };
 
     const title = computed(() => message.value? TITLE_MAP[message.value.type]: null)    
@@ -57,13 +60,14 @@ export default {
       showMessage,
       title,
       messageClass,
+      closeMessage,
       close: () => store.commit('clearMessage') // Вызываем мутацию закрытия сообщения
     };
   },
 };
 </script>
   
-  <style scoped>
+  <style>
   /* Основной контейнер для уведомления */
   .app-message {
     position: fixed; /* Фиксированное положение */
@@ -77,6 +81,7 @@ export default {
     justify-content: space-between; /* Равномерное распределение пространства между элементами */
     animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
     width: 300px; /* Ширина контейнера */
+    z-index: 9999;
   }
   
   /* Стили для уведомления об ошибке */
@@ -114,7 +119,7 @@ export default {
   /* Кнопка закрытия уведомления */
   .close-button {
     position: absolute; /*Абсолютное позиционирование крестика относительно уведомления*/
-    right: 1%; /* Отступ справа */
+    right: 2%; /* Отступ справа */
     top: 10%; /* Отступ сверху */
     background: none; /* Прозрачный фон */
     border: none; /* Без границ */
@@ -122,7 +127,7 @@ export default {
     cursor: pointer; /* Курсор в виде руки при наведении */
     color: inherit; /* Цвет текста наследуется от родителя */
   }
-  
+
   /* Анимация появления уведомления */
   @keyframes fadeIn {
     from {
@@ -135,9 +140,46 @@ export default {
     }
   }
 
+  /* Анимация исчезновения уведомления */
+  @keyframes fadeOut {
+    from {
+      opacity: 1; /* Начальная прозрачность */
+      transform: translateY(0); /* Исходное положение */
+    }
+    to {
+      opacity: 0; /* Полностью прозрачное состояние */
+      transform: translateY(-20px); /* Смещение вверх при исчезновении */
+    }
+  }
+
+  /* Применяем анимации */
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .fade-out {
+    animation: fadeOut 0.5s ease-in-out forwards;
+  }
+
+  .app-message-profile.fade-out {
+    animation: fadeOut 0.9s ease-in-out forwards;
+  }
+
+  .message-text{
+    font-size: 14px;
+  }
+
+  .message-title{
+    font-size: 15px;
+    font-weight:bold;
+  }
+
   @media (max-width: 480px) {
-    .message-title, .message-text{
+    .message-title{
       font-size: 13px;
+    }
+    .message-text{
+      font-size: 12px;
     }
   }
   </style>

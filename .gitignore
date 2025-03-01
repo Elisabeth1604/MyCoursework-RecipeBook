@@ -30,7 +30,7 @@ workspace.xml
 tasks.xml
 shelf/
 
-# ====== PyCharm (если используется) ======
+# ====== PyCharm ======
 *.iml
 .idea/
 .vscode/
@@ -45,3 +45,12 @@ shelf/
 *.bak
 *.swp
 *.swo
+
+# Django media (загруженные файлы пользователей)
+media/
+
+# ====== MySQL (локальная БД) ======
+*.sql
+*.sql.gz
+*.dump
+mysql-data/

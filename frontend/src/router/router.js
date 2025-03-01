@@ -85,7 +85,8 @@ router.beforeEach((to, from, next) => {
     next() // Если пользователь авторизован, переходим на новую страницу
   } else if(requireAuth && !store.getters['auth/isAuthenticated']){
     alert('Вы должны быть авторизованы, чтобы получить доступ к этой странице.');
-    next(true) // Прерываем переход на страницу  (изменить на false потом!!!!)
+    store.commit('auth/showLoginModal');
+    next(false) // Прерываем переход на страницу (изменить на false потом!!!!)
     
   } else{
     next()

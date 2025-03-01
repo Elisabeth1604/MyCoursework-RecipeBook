@@ -19,3 +19,9 @@ export default {
     components:{ TheHeader, TheFooter }
 }
 </script>
+
+<style scoped>
+.container{
+  margin-top: 110px;
+}
+</style>

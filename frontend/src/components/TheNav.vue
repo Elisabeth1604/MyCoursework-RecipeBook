@@ -24,16 +24,16 @@
                 <!-- Выпадающее меню -->
                 <ul class="dropdown-menu" v-if="isAuth">
                     <li><a @click="handleProfile">
-                        <img src="..\assets\icons\profile.png" alt="Иконка профиля" class="dropdown-menu-icon">Мой профиль</a></li>
+                        <img :src="require('@/assets/icons/profile.png')" alt="Иконка профиля" class="dropdown-menu-icon">Мой профиль</a></li>
                     <hr>
                     <li><a @click="handleMyRecipes">
-                        <img src="..\assets\icons\food.png" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</a></li>
+                        <img :src="require('@/assets/icons/food.png')" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</a></li>
                     <hr>
                     <li><a @click="handleFavourite">
-                        <img src="..\assets\icons\heart (1).png" alt="Иконка избранного" class="dropdown-menu-icon">Избранное</a></li>
+                        <img :src="require('@/assets/icons/heart (1).png')" alt="Иконка избранного" class="dropdown-menu-icon">Избранное</a></li>
                     <hr>
                     <li><a @click.prevent="logout">
-                        <img src="..\assets\icons\door.png" alt="Иконка выйти" class="dropdown-menu-icon">Выйти</a></li>
+                        <img :src="require('@/assets/icons/door.png')" alt="Иконка выйти" class="dropdown-menu-icon">Выйти</a></li>
                 </ul>
         </div>
         </div>
@@ -44,7 +44,7 @@
         <!-- Модальное окно входа, обрабатываем событие закрытия, которое эмитит LoginModal-->
         <auth-modal 
             :isLoginVisible="isLoginVisible"
-            @close="isLoginVisible = false"
+            @close="store.commit('auth/hideLoginModal')"
         ></auth-modal>
     </div>
 </template>
@@ -55,15 +55,24 @@ import AppButton from './AppButton.vue';
 import {useRouter} from 'vue-router'
 import {useStore} from 'vuex'
 import AuthModal from '@/modal/AuthModal.vue';
+import axios from "axios";
+import store from "@/store/store";
 
 export default defineComponent({
+  computed: {
+    store() {
+      return store
+    }
+  },
     setup() {
         const router = useRouter()
         const store = useStore()
 
         const isMenuOpen = ref(false) // Управляем открытием выпадающего меню
-        const isAuth = ref(true) // Управляем аутентификацией
-        const isLoginVisible = ref(false) // Управляем показом модального окна входа
+
+        const isAuth = computed(() => store.getters['auth/isAuthenticated']);// Управляем аутентификацией
+
+        const isLoginVisible = computed(() => store.state.auth.isLoginVisible);// Управляем показом модального окна входа
 
         const viewCategories = () => {
             alert('Opening categories...');
@@ -84,20 +93,14 @@ export default defineComponent({
         }
 
         const openLoginModal = () => {
-            isLoginVisible.value = true; // Показываем модальное окно
-            console.log('Показали модальное окно входа');
-            console.log(isLoginVisible.value);
+          if (!isLoginVisible.value) {
+            store.commit('auth/showLoginModal');
+          }
         }
       
         const handleAddRecipe = () => {  // Обработчик нажатия на кнопку Добавить рецепт
             console.log('Добавить рецепт нажат'); // Добавьте это сообщение
-            // if (isAuth.value) {
                 router.push('/add-recipe');
-                
-            // } else {
-            //     openLoginModal();
-            //     console.log('Переход не выполнен');
-            // }
         };
 
         const handleFavourite = () => { // Обработчик нажатия Избранное
@@ -113,12 +116,18 @@ export default defineComponent({
         const handleMyRecipes = () => { // Обработчик нажатия Мои рецепты
             console.log('Нажали перейти в мои рецепты');
             router.push('/my-recipes');
-        }
+        };
+
+        onMounted(() => {
+          store.dispatch('user/fetchUser');
+        });
                 
         return{
             logout:() => {
-                store.commit('auth/logout') // Вызываем мутацию logout
-                router.push('/') // Отправляем пользователя на главную
+                store.dispatch('auth/logout')
+                store.dispatch("user/logoutUser")
+                delete axios.defaults.headers.common['Authorization'];
+                router.push('/')
             },
             isAuth,
             isLoginVisible,
@@ -134,7 +143,7 @@ export default defineComponent({
         }
     },
     components:{ AppButton, 'auth-modal':AuthModal}
-   
+
 })
 </script>
 

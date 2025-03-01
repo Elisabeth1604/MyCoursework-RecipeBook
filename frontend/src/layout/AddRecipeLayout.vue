@@ -1,6 +1,8 @@
 <template>
     <the-header></the-header>
-    <router-view/>
+    <div class="container">
+      <router-view/>
+    </div>
     <the-footer></the-footer>
 </template>
 
@@ -16,3 +18,9 @@ export default defineComponent({
     components:{ TheHeader, TheFooter}
 })
 </script>
+
+<style scoped>
+.container{
+  margin-top: 110px;
+}
+</style>
