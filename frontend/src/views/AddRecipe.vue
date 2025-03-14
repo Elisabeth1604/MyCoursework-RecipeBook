@@ -1,187 +1,185 @@
 <template>
-    <!-- Форма добавления рецепта -->
-      <h2>Добавить новый рецепт</h2>
-      <form @submit.prevent="submitRecipe"> <!-- Отправка формы с предотвращением стандартной перезагрузки страницы -->
-          <!-- Поле (компонент) для ввода НАЗВАНИЯ рецепта с привязкой к данным компонента через v-model-->
+<!-- Форма добавления рецепта -->
+  <h2>Добавить новый рецепт</h2>
+    <form @submit.prevent="submitRecipe"> <!-- Отправка формы с предотвращением стандартной перезагрузки страницы -->
+      <!-- Поле (компонент) для ввода НАЗВАНИЯ рецепта с привязкой к данным компонента через v-model-->
+      <app-input
+          label="Название рецепта"
+          name="title"
+          iD="title"
+          type="text"
+          input-class="add-recipe-form"
+          placeholder="Введите название рецепта"
+          required
+      ></app-input> <!-- trim убирает пробелы в результирующей строке-->
+
+      <!-- Поле (компонент) для ввода КРАТКОГО ОПИСАНИЯ рецепта с привязкой к данным компонента через v-model-->
+      <app-input
+          label="Краткое описание"
+          name="description"
+          iD="description"
+          type="text"
+          input-class="add-recipe-form"
+          placeholder="Введите описание рецепта"
+          required
+      ></app-input>
+
+      <!-- Поле (компонент) для ЗАГРУЗКИ ИЗОБРАЖЕНИЯ рецепта-->
+      <app-input
+          label="Загрузите изображение блюда"
+          name="image"
+          iD="image"
+          type="file"
+          input-class="add-recipe-form"
+          @change="handleImageUpload"
+          required
+      ></app-input>
+
+      <label class="label-steps">Добавьте ингредиенты</label>
+      <!-- Поле (компонент) для ДОБАВЛЕНИЯ ИНГРЕДИЕНТОВ рецепта -->
+      <div class="form-group">
+        <div v-for="(ingredient, index) in recipe.ingredients" :key="ingredient.name" class="ingredient">
+          <!-- Поле для названия ингредиента (!потом будет выбор из базы) -->
           <app-input
-              label="Название рецепта"
-              name="title"
-              iD="title"
-              type="text"
-              input-class="add-recipe-form"
-
-              placeholder="Введите название рецепта"
-              required
-          ></app-input> <!-- trim убирает пробелы в результирующей строке-->
-
-          <!-- Поле (компонент) для ввода КРАТКОГО ОПИСАНИЯ рецепта с привязкой к данным компонента через v-model-->
+            :label="'Ингредиент ' + (index + 1) + ':'"
+            name="ingredient"
+            type="string"
+            input-class="ingredient-input"
+            required
+        ></app-input>
+        <!-- Поле для количества ингредиента -->
           <app-input
-              label="Краткое описание"
-              name="description"
-              iD="description"
-              type="text"
-              input-class="add-recipe-form"
-
-              placeholder="Введите описание рецепта"
-              required
-          ></app-input>
-
-          <!-- Поле (компонент) для ЗАГРУЗКИ ИЗОБРАЖЕНИЯ рецепта-->
-          <app-input
-              label="Загрузите изображение блюда"
-              name="image"
-              iD="image"
-              type="file"
-              input-class="add-recipe-form"
-              @change="handleImageUpload"
-              required
-          ></app-input>
-
-          <label class="label-steps">Добавьте ингредиенты</label>
-          <!-- Поле (компонент) для ДОБАВЛЕНИЯ ИНГРЕДИЕНТОВ рецепта -->
-          <div class="form-group">
-            <div v-for="(ingredient, index) in recipe.ingredients" :key="ingredient.name" class="ingredient">
-              <!-- Поле для названия ингредиента (!потом будет выбор из базы) -->
-              <app-input
-                :label="'Ингредиент ' + (index + 1) + ':'"
-                name="ingredient"
-                type="string"
-                input-class="ingredient-input"
-                required
-            ></app-input>
-            <!-- Поле для количества ингредиента -->
-              <app-input
-                label="Количество"
-                v-model="ingredient.quantity"
-                name="quantity"
-                type="number"
-                input-class="quantity-input"
-                required
-            ></app-input>
-              <!-- Выпадающий список выбора единиц измерения -->
-              <div class="form-group-ingredients">
-              <label class="unit-select-label">Единица измерения</label>
-              <select v-model="ingredient.unit" class="unit-select" >
-                <option disabled value="">Выберите единицу</option>
-                  <option value="граммы">гр</option>
-                  <option value="килограммы">кг</option>
-                  <option value="литры">л</option>
-                  <option value="миллилитры">мл</option>
-                  <option value="стаканы">стак.</option>
-                  <option value="столовые ложки">стол.л.</option>
-                  <option value="чайные ложки">чайн.л.</option>
-                  <option value="шт">шт</option>
-                  <option value="зубчики">зубч.</option>
-                  <option value="щепотки">щепотка</option>
-              </select>
-              </div>
-              <app-button
-              button-class="remove-ingredient"
-              @click.stop="removeIngredient(index)"
-              type="button"
-              >Удалить <span class="ingredient-text">ингредиент</span></app-button>
-            </div>
-            <app-button
-              button-class="add-step-btn"
-              type="button"
-              @action="addIngredient"
-              >Добавить ингредиент</app-button>
-          </div>
-
-          <div class="servings-time-container">
-            <!-- Поле (компонент) для КОЛИЧЕСТВА ПОРЦИЙ рецепта с привязкой к данным компонента через v-model-->
-            <app-input
-                label="Порции"
-                name="servings"
-                iD="servings"
-                type="number"
-                input-class="add-recipe-form"
-
-                placeholder="Количество порций"
-                required
-            ></app-input>
-
-            <div class="form-group-prep-time">
-              <!-- Основное название для группы полей времени приготовления -->
-              <label>Время приготовления</label>
-
-              <div class="time-inputs">
-                <!-- Поле для ввода количества часов -->
-                <app-input
-                  label=""
-                  name="prepTimeHours"
-                  iD="prepTimeHours"
-                  type="number"
-                  input-class="prep-time-input"
-                  placeholder="Часы"
-                  required
-                ></app-input>
-                <span class="time-label">час(ов)</span>
-
-                <!-- Поле для ввода количества минут -->
-                <app-input
-                  label=""
-                  name="prepTimeMinutes"
-                  iD="prepTimeMinutes"
-                  type="number"
-                  input-class="prep-time-input"
-                  placeholder="Минуты"
-                  required
-                ></app-input>
-                <span class="time-label">минут</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Выпадающий список выбора категории блюда -->
-          <div class="form-group">
-          <label class="categories-select-label">Категория блюда</label>
-          <select v-model="recipe.category" class="category-select" >
-            <option disabled value="">Выберите категорию</option>
-            <option value="завтраки">Завтраки</option>
-            <option value="закуски">Закуски</option>
-            <option value="напитки">Напитки</option>
-            <option value="основные блюда">Основные блюда</option>
-            <option value="паста и пицца">Паста и пицца</option>
-            <option value="ризотто">Ризотто</option>
-            <option value="салаты">Салаты</option>
-            <option value="соусы и маринады">Соусы и маринады</option>
-            <option value="супы">Супы</option>
-            <option value="сэндвичи">Сэндвичи</option>
-            <option value="выпечка и десерты">Выпечка и десерты</option>
-            <option value="заготовки">Заготовки</option>
+            label="Количество"
+            v-model="ingredient.quantity"
+            name="quantity"
+            type="number"
+            input-class="quantity-input"
+            required
+        ></app-input>
+          <!-- Выпадающий список выбора единиц измерения -->
+          <div class="form-group-ingredients">
+          <label class="unit-select-label">Единица измерения</label>
+          <select v-model="ingredient.unit" class="unit-select" >
+            <option disabled value="">Выберите единицу</option>
+              <option value="граммы">гр</option>
+              <option value="килограммы">кг</option>
+              <option value="литры">л</option>
+              <option value="миллилитры">мл</option>
+              <option value="стаканы">стак.</option>
+              <option value="столовые ложки">стол.л.</option>
+              <option value="чайные ложки">чайн.л.</option>
+              <option value="шт">шт</option>
+              <option value="зубчики">зубч.</option>
+              <option value="щепотки">щепотка</option>
           </select>
           </div>
+          <app-button
+          button-class="remove-ingredient"
+          @click.stop="removeIngredient(index)"
+          type="button"
+          >Удалить <span class="ingredient-text">ингредиент</span></app-button>
+        </div>
+        <app-button
+          button-class="add-step-btn"
+          type="button"
+          @action="addIngredient"
+          >Добавить ингредиент</app-button>
+      </div>
 
-          <!-- Поле для ШАГОВ ПРИГОТОВЛЕНИЯ-->
-          <label class="label-steps">Шаги приготовления</label>
-          <div class="inform-case">
-                <img src="..\assets\icons\information.png" alt="Информационная табличка">
-                <p class="inform">Рекомендуем разбивать рецепт минимум на 5 шагов. Используй горизонтальные фото!</p>
-              </div>
-          <div class="form-group">
-              <div v-for="(step, index) in recipe.steps" :key="index" class="step">
-                  <label>Шаг {{ index + 1 }}:</label>
-                  <textarea class="step-description" v-model="step.description" placeholder="Опишите этот шаг" required></textarea>
-                  <label>Загрузите изображение для этого шага:</label>
-                  <input type="file" @change="handleStepImageUpload(index)" required>
+      <div class="servings-time-container">
+        <!-- Поле (компонент) для КОЛИЧЕСТВА ПОРЦИЙ рецепта с привязкой к данным компонента через v-model-->
+        <app-input
+            label="Порции"
+            name="servings"
+            iD="servings"
+            type="number"
+            input-class="add-recipe-form"
 
-                  <app-button
-                  button-class="remove-step"
-                  @action="removeStep(index)"
-                  >Удалить шаг</app-button>
-              </div>
-              <app-button
-              button-class="add-step-btn"
-              type="button"
-              @action="addStep"
-              >Добавить шаг</app-button>
+            placeholder="Количество порций"
+            required
+        ></app-input>
+
+        <div class="form-group-prep-time">
+          <!-- Основное название для группы полей времени приготовления -->
+          <label>Время приготовления</label>
+
+          <div class="time-inputs">
+            <!-- Поле для ввода количества часов -->
+            <app-input
+              label=""
+              name="prepTimeHours"
+              iD="prepTimeHours"
+              type="number"
+              input-class="prep-time-input"
+              placeholder="Часы"
+              required
+            ></app-input>
+            <span class="time-label">час(ов)</span>
+
+            <!-- Поле для ввода количества минут -->
+            <app-input
+              label=""
+              name="prepTimeMinutes"
+              iD="prepTimeMinutes"
+              type="number"
+              input-class="prep-time-input"
+              placeholder="Минуты"
+              required
+            ></app-input>
+            <span class="time-label">минут</span>
           </div>
+        </div>
+      </div>
 
-          <app-button type="submit"
-          button-class="submit-btn"
-          >Отправить рецепт</app-button>
-      </form>
+      <!-- Выпадающий список выбора категории блюда -->
+      <div class="form-group">
+      <label class="categories-select-label">Категория блюда</label>
+      <select v-model="recipe.category" class="category-select" >
+        <option disabled value="">Выберите категорию</option>
+        <option value="завтраки">Завтраки</option>
+        <option value="закуски">Закуски</option>
+        <option value="напитки">Напитки</option>
+        <option value="основные блюда">Основные блюда</option>
+        <option value="паста и пицца">Паста и пицца</option>
+        <option value="ризотто">Ризотто</option>
+        <option value="салаты">Салаты</option>
+        <option value="соусы и маринады">Соусы и маринады</option>
+        <option value="супы">Супы</option>
+        <option value="сэндвичи">Сэндвичи</option>
+        <option value="выпечка и десерты">Выпечка и десерты</option>
+        <option value="заготовки">Заготовки</option>
+      </select>
+      </div>
+
+      <!-- Поле для ШАГОВ ПРИГОТОВЛЕНИЯ-->
+      <label class="label-steps">Шаги приготовления</label>
+      <div class="inform-case">
+            <img src="..\assets\icons\information.png" alt="Информационная табличка">
+            <p class="inform">Рекомендуем разбивать рецепт минимум на 5 шагов. Используй горизонтальные фото!</p>
+          </div>
+      <div class="form-group">
+          <div v-for="(step, index) in recipe.steps" :key="index" class="step">
+              <label>Шаг {{ index + 1 }}:</label>
+              <textarea class="step-description" v-model="step.description" placeholder="Опишите этот шаг" required></textarea>
+              <label>Загрузите изображение для этого шага:</label>
+              <input type="file" @change="handleStepImageUpload(index)" required>
+
+              <app-button
+              button-class="remove-step"
+              @action="removeStep(index)"
+              >Удалить шаг</app-button>
+          </div>
+          <app-button
+          button-class="add-step-btn"
+          type="button"
+          @action="addStep"
+          >Добавить шаг</app-button>
+      </div>
+
+      <app-button type="submit"
+      button-class="submit-btn"
+      >Отправить рецепт</app-button>
+    </form>
 </template>
 
 <script>

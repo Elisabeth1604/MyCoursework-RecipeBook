@@ -8,7 +8,6 @@ const plugins = []
 if(process.env.NODE_ENV === 'development'){ // Если мы находимся в режиме разработки
   plugins.push(createLogger()) // Добавляем плагин, чтобы следить, что находится со стором
 }
-
 let messageTimeoutId = null;
 let fadeTimeoutId = null;
 
@@ -16,15 +15,13 @@ export default createStore({
   plugins,
   state(){
     return {
-      recipes: [], // Здесь хранить рецепты
+      mediaUrl: 'http://127.0.0.1:8000/', // Централизованный URL медиафайлов
       message: null, // Сообщения об ошибках, успехе или предупреждении
       showMessage: false // Флаг для отображения сообщения
     };
   },
   getters: {
-    allRecipes(state) {
-      return state.recipes;
-    },
+    mediaUrl: state => state.mediaUrl,
     message(state){
       return state.message
     },
@@ -33,40 +30,16 @@ export default createStore({
     }
   },
   mutations: {
-    ADD_RECIPE(state, recipe) {
-      state.recipes.push(recipe);
-    },
-
     setMessage(state, { type, text, position = "default", fadingOut = false }) {
       state.message = { type, text, position, fadingOut };
       state.showMessage = true;
     },
-
     clearMessage(state){ //Очищение сообщения
       state.message = null;
-      state.showMessage = false; // Сбрасываем флаг для отображения сообщения
+      state.showMessage = false;
     }
   },
   actions: {
-    async addRecipe({ commit }, recipe) {
-      try {
-        const response = await fetch('https://recipe-book-8f83f-default-rtdb.firebaseio.com/recipes.json', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(recipe)
-        });
-        const firebaseData = await response.json();
-        console.log('Recipe added:', firebaseData);
-  
-        // Коммит мутации, если нужно
-        // commit('ADD_RECIPE', recipe);
-      } catch (error) {
-        console.error('Ошибка при добавлении рецепта в Store:', error);
-      }
-    },
-
     setMessage({ commit }, message) {
       // Очищаем предыдущие таймауты, если они есть
       if (messageTimeoutId) clearTimeout(messageTimeoutId);

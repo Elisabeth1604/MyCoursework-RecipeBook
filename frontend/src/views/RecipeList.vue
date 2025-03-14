@@ -1,21 +1,29 @@
 <template>
-  <app-page title="Последние рецепты"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
-      <div class="recipes" ref="recipeGrid">
-          <recipe-card
-              v-for="item in recipes"
-              :key="item.id"
-              :recipe-id="item.id"
-              :recipe-title="item.title"
-              :recipe-description="item.description"
-              :recipe-image="item.image"
-              :prepTime="item.prepTime"
-              :ingredients="item.ingredients"
-              :servings="item.servings"
-              :calories="item.kkal"
-              :is-expanded="expandedCardId === item.id"
-              @toggle-card="toggleCard(item.id)"
-          />
-      </div>
+  <app-page title="Последние рецепты" filters> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
+    <div class="recipes" ref="recipeGrid" v-if="recipes && recipes.length">
+      <recipe-card
+          v-for="item in recipes"
+          :key="item.id"
+          :recipe-id="item.id"
+          :recipe-title="item.recipe_title"
+          :recipe-description="item.description"
+          :recipe-image="item.main_photo"
+          :prepTimeMin="item.prep_time_min"
+          :prepTimeHour="item.prep_time_hour"
+          :ingredients="item.ingredients"
+          :servings="item.servings"
+          :calories="item.calories_per_100"
+          :is-expanded="expandedCardId === item.id"
+          @toggle-card="toggleCard(item.id)"
+      />
+    </div>
+    <!-- Если рецептов нет, например, по заданным фильтрам, выводим сообщение -->
+    <div v-else class="no-recipes">
+      <p>
+        Таких рецептов пока нет, ваш может
+        <router-link to="/add-recipe" class="link"> стать первым</router-link>!
+      </p>
+    </div>
   </app-page>
 </template>
 
@@ -24,14 +32,9 @@ import { ref, onMounted, computed } from 'vue';
 import {useStore} from 'vuex'
 import RecipeCard from '@/components/AppRecipeCard.vue';
 import AppPage from '@/components/ui/AppPage.vue';
-import axios from 'axios';
 
 export default {
   name: 'App',
-  components: {
-    'recipe-card': RecipeCard,
-     AppPage
-  },
   setup() {
     const expandedCardId = ref(null);
     const store = useStore();
@@ -42,45 +45,24 @@ export default {
       expandedCardId.value = expandedCardId.value === id ? null : id;
     };
 
-    // const getRecipesFromDatabase = async () => {
-    //   try {
-    //     const { data } = await axios.get(
-    //       'https://recipe-book-8f83f-default-rtdb.firebaseio.com/recipes.json'
-    //     );
-    //     const fetchedRecipes = Object.keys(data).map((key) => ({
-    //       id: key,
-    //       title: data[key].title,
-    //       description: data[key].description,
-    //       prepTime: data[key].prepTime,
-    //       servings: data[key].servings,
-    //       image: data[key].image || null,
-    //       ingredients: data[key].ingredients || [],
-    //     }));
-
-    //     recipes.value = [...recipes.value, ...fetchedRecipes];
-    //   } catch (error) {
-    //     console.error('Ошибка при получении данных из базы данных:', error);
-    //   }
-    // };
-
     onMounted(() => {
-      // Получаем рецепты при загрузке компонента
-      // getRecipesFromDatabase();
-      // store.dispatch('recipe/fetchRecipes');
+      store.dispatch('recipe/fetchRecipes');
     });
 
     return {
       expandedCardId,
       recipes,
       toggleCard
-      // getRecipesFromDatabase,
     };
   },
+  components: {
+    RecipeCard,
+    AppPage
+  }
 };
 </script>
 
 <style>
-
 .recipe-list {
   padding: 40px;
   max-width: 1200px;
@@ -94,8 +76,27 @@ export default {
   align-items: start; /* Все карточки выравниваются по верхней границе */
 }
 
-h2{
-  color:#333;
+.no-recipes {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+}
+
+.link{
+  display: inline-block;
+  margin-top: 5px;
+  color:rgb(83, 127, 163);
+  text-decoration-line: none;
+  border-bottom: 1px solid;
+}
+
+/* Цвет при наведении на ссылку */
+.link:hover, .link:hover {
+  color: #FF9973;
+}
+/* Цвет при нажатии на ссылку */
+.link:active, .link:active {
+  color: #fc511c;
 }
 
 /* адаптивность */

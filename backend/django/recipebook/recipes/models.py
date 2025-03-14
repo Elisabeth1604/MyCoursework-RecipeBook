@@ -41,25 +41,13 @@ class Unit(models.Model):
 
 class IngredientUnits(models.Model):
     id = models.AutoField(primary_key=True)  # Новый суррогатный ключ
-    ingredient= models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="ingredient_units")
-    unit= models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="ingredient_units")
+    ingredient= models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="ingredient_units", db_column='ingredient')
+    unit= models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="ingredient_units", db_column="unit")
     conversion_to_grams = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'ingredient_units'
         unique_together = (('ingredient', 'unit'),)
-
-class User(models.Model):
-    username = models.CharField(max_length=45, unique=True)
-    email = models.CharField(max_length=100, unique=True)
-    password = models.CharField(max_length=100)
-    created_at = models.DateField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'users'
-
-    def __str__(self):
-        return self.username
 
 class Recipe(models.Model):
     recipe_title = models.CharField(max_length=255, unique=True)
@@ -69,9 +57,10 @@ class Recipe(models.Model):
     prep_time_hour = models.IntegerField(blank=True, default=0)
     main_photo = models.CharField(max_length=255)
     created_at = models.DateField(auto_now_add=True)
+    calories_per_100 = models.FloatField(default=0)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="recipes")
+    user = models.ForeignKey("users.CustomUser", on_delete=models.CASCADE, related_name="recipes", db_column='user')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="recipes", db_column='category')
 
     class Meta:
         db_table = 'recipes'
@@ -81,7 +70,7 @@ class Recipe(models.Model):
 
 class RecipeStep(models.Model):
     id = models.AutoField(primary_key=True)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="steps")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="steps", db_column='recipe')
     description = models.TextField()
     photo = models.CharField(max_length=255, blank=True, null=True)
 
@@ -93,9 +82,9 @@ class RecipeStep(models.Model):
 class RecipeIngredient(models.Model):
     id = models.AutoField(primary_key=True)
     quantity = models.IntegerField()
-    unit =  models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    unit =  models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, db_column='unit')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, db_column='recipe')
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, db_column='ingredient')
 
     class Meta:
         db_table = 'recipes_has_ingredients'
@@ -104,34 +93,3 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         return f"{self.recipe.recipe_title} - {self.ingredient.ingredient_name}: {self.quantity}"
 
-
-class Subscription(models.Model):
-    subscriber = models.ForeignKey(User, related_name="subscriptions", on_delete=models.CASCADE)
-    target = models.ForeignKey(User, related_name="followers", on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'subscriptions'
-        unique_together = (('subscriber', 'target'),)
-
-
-class Comment(models.Model):
-    id = models.AutoField(primary_key=True)
-    text = models.TextField()
-    created_at = models.DateField(auto_now_add=True)
-    user= models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="comments")
-
-    class Meta:
-        db_table = 'comments'
-
-    def __str__(self):
-        return f"Комментарий {self.user.username} к {self.recipe.recipe_title}"
-
-
-class Favourite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favourites")
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="favourites")
-
-    class Meta:
-        db_table = 'favourites'
-        unique_together = (('recipe', 'user'),)

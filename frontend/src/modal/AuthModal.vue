@@ -1,68 +1,69 @@
 <template>
-    <div v-if="isLoginVisible" class="modal-overlay" @click="closeModal"> <!-- Полупрозрачный затемнённый фон -->
-      <div class="modal-window" @click.stop> <!-- Само модальное окно, клик на нем не закрывает модальное окно -->
-      <h2>Вход</h2>
-          <form @submit.prevent="onSubmit"> <!--Отправка формы входа с предотвращением стандартной перезагрузки страницы-->
-              <app-input
-                  label="Имя пользователя"
-                  name="username"
-                  type="text"
-                  iD="uname"
-                  v-model="username"
-                  input-class="login-form"
-                  placeholder="Введите имя пользователя"
-                  :error="uError"
-                  @blur="uBlur"
-                  required
-              ></app-input>
+  <div v-if="isLoginVisible" class="modal-overlay" @click="closeModal"> <!-- Полупрозрачный затемнённый фон -->
+    <div class="modal-window" @click.stop> <!-- Само модальное окно, клик на нем не закрывает модальное окно -->
+    <h2>Вход</h2>
+      <form @submit.prevent="onSubmit"> <!--Отправка формы входа с предотвращением стандартной перезагрузки страницы-->
+        <app-input
+            label="Имя пользователя"
+            name="username"
+            type="text"
+            iD="uname"
+            v-model="username"
+            input-class="login-form"
+            placeholder="Введите имя пользователя"
+            :error="uError"
+            @blur="uBlur"
+            required
+        ></app-input>
 
-              <div class="password-input-container"> <!-- Контейнер для поля пароля -->
-                <!-- Поле ввода пароля с изменением типа text/password в зависимости от значения isPasswordVisible
-                для функционала скрыть и показать -->
-                <app-input
-                    label="Пароль"
-                    name="password"
-                    :type="isPasswordVisible ? 'text' : 'password'"
-                    iD="password"
-                    input-class="login-form"
-                    v-model="password"
-                    placeholder="Введите пароль"
-                    :error="pError"
-                    @blur="pBlur"
-                    required
-                ></app-input>
-                <!-- Показать/скрыть пароль только для поля password c предотвращением (prevent) перезагрузки по клику по умолчанию -->
-                <a href="#" @click.prevent="togglePasswordVisibility"
-                   class="password-control" :class="{ view: isPasswordVisible }"
-                   :title="isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'"></a>
-              </div>
-              <div class="form-footer">
-                <div class="check-box-memory">
-                      <input type="checkbox" id="memoryMe" name="memoryMe" value="to-memory" />
-                      <label for="memoryMe">Запомнить меня?</label>
-                </div>
-                <app-button type="submit"
-                    :disabled="isSubmitting"
-                  >Войти</app-button>
-              </div>
+        <div class="password-input-container"> <!-- Контейнер для поля пароля -->
+          <!-- Поле ввода пароля с изменением типа text/password в зависимости от значения isPasswordVisible
+          для функционала скрыть и показать -->
+          <app-input
+              label="Пароль"
+              name="password"
+              :type="isPasswordVisible ? 'text' : 'password'"
+              iD="password"
+              input-class="login-form"
+              v-model="password"
+              placeholder="Введите пароль"
+              :error="pError"
+              @blur="pBlur"
+              required
+          ></app-input>
+          <!-- Показать/скрыть пароль только для поля password c предотвращением (prevent) перезагрузки по клику по умолчанию -->
+          <a href="#" @click.prevent="togglePasswordVisibility"
+             class="password-control" :class="{ view: isPasswordVisible }"
+             :title="isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'"></a>
+        </div>
+        <div class="form-footer">
+          <div class="check-box-memory">
+                <input type="checkbox" id="memoryMe" name="memoryMe" value="to-memory" />
+                <label for="memoryMe">Запомнить меня?</label>
+          </div>
+          <app-button type="submit"
+              :disabled="isSubmitting"
+            >Войти</app-button>
+        </div>
 
-              <app-link
-              text="Забыли пароль?"
-              @click="closeModal"
-              link-class="link-forgot-pass"></app-link>
+        <app-link
+        text="Забыли пароль?"
+        @click="closeModal"
+        link-class="link-forgot-pass"></app-link>
 
-              <router-link to="/reg"
-              @click="closeModal"
-              class="link-not-registered"
-              >Еще не зарегистрированы?</router-link>
-          </form>
-      </div>
+        <router-link to="/reg"
+        @click="closeModal"
+        class="link-not-registered"
+        >Еще не зарегистрированы?</router-link>
+      </form>
     </div>
-    <app-message v-if="showMessage" :text="message"/>
+  </div>
+  <app-message v-if="showMessage" :text="message"/>
 </template>
 
 <script>
 import {defineComponent, toRefs, ref, computed} from 'vue';
+import {useStore} from "vuex";
 import AppInput from '@/components/AppInput.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
@@ -70,43 +71,41 @@ import AppMessage from '@/components/ui/AppMessage.vue';
 import { UseLoginForm } from '@/use/login-form';
 
 export default defineComponent({
-    emits:['close'],
-    props:{
-          isLoginVisible:{ // управляет видимостью модального окна
-            type: Boolean,
-            default: false
-          }
-    },
-    computed: {
-      message() {
-        return this.$store.getters.message;
-      },
-      showMessage() {
-        return this.$store.getters.showMessage;
-      }
-    },
+  emits:['close'],
+  props:{
+    isLoginVisible:{ // управляет видимостью модального окна
+      type: Boolean,
+      default: false
+    }
+  },
+  setup( props, { emit }) {
+    const store = useStore();
+    // Получаем сообщение и флаг показа сообщения через computed
+    const message = computed(() => store.getters.message);
+    const showMessage = computed(() => store.getters.showMessage);
 
-    setup( props, { emit }) {
-        const isPasswordVisible= ref(false) // Состояние видимости пароля
+    const isPasswordVisible= ref(false) // Состояние видимости пароля
 
-        const closeModal = () => {
-          emit('close');
-          isPasswordVisible.value=false
-        };
-       const resetForm = () => {
-            // Сброс всех полей формы
-        }
-      const togglePasswordVisibility = () => {
-        isPasswordVisible.value = !isPasswordVisible.value;
-      }
-      return{ ...UseLoginForm(), // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику туда
-        togglePasswordVisibility,
-        closeModal,
-        resetForm,
-        isPasswordVisible,
-      }
-    },
-    components:{AppInput, AppButton, AppLink, AppMessage}
+    const closeModal = () => {
+      emit('close');
+      isPasswordVisible.value=false
+    };
+    const resetForm = () => {
+        // Сброс всех полей формы
+    }
+    const togglePasswordVisibility = () => {
+      isPasswordVisible.value = !isPasswordVisible.value;
+    }
+    return{ ...UseLoginForm(), // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику туда
+      togglePasswordVisibility,
+      closeModal,
+      resetForm,
+      isPasswordVisible,
+      message,
+      showMessage
+    }
+  },
+  components:{AppInput, AppButton, AppLink, AppMessage}
 })
 </script>
 
@@ -136,14 +135,14 @@ export default defineComponent({
 }
 
 .login-form{
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 38px;
-    padding: 10px; /* Отступ справа для иконки */
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 38px;
+  padding: 10px; /* Отступ справа для иконки */
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .form-footer {

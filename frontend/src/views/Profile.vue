@@ -1,129 +1,145 @@
 <template>
-    <app-page title="Профиль"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
-      <div class="profile">
-        <section class="profile-info">
-        <div class="profile-photo-container" >
-          <!-- Аватарка с анимацией загрузки -->
-          <div class="avatar-wrapper" v-if="isUserLoaded">
-            <!-- Основное изображение -->
-            <img
-                v-if="user.avatar && !avatarError"
-                :src="`${mediaUrl}${user.avatar}`"
-                alt="Фото пользователя"
-                class="avatar"
-                :class="{ 'hidden': !avatarLoaded }"
-                @error="handleAvatarError"
-            >
+  <app-page title="Профиль"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
+    <div class="profile">
+      <section class="profile-info">
+      <div class="profile-photo-container" >
+        <!-- Аватарка с анимацией загрузки -->
+        <div class="avatar-wrapper" v-if="isUserLoaded">
+          <!-- Основное изображение -->
+          <img
+              v-if="user.avatar && !avatarError"
+              :src="`${mediaUrl}${user.avatar}`"
+              alt="Фото пользователя"
+              class="avatar"
+              :class="{ 'hidden': !avatarLoaded }"
+              @error="handleAvatarError"
+          >
 
-            <!-- Дефолтное изображение (появляется, если нет аватарки или ошибка) -->
-            <img
-                v-else
-                :src="require('@/assets/icons/profile.png')"
-                alt="Дефолтное фото"
-                class="avatar default-avatar"
-            >
-          </div>
-        </div>
-        <div class="details">
-            <p><strong>Имя:</strong> {{ user.username ? user.username : 'Загрузка...' }}</p>
-            <p><strong>Email:</strong> {{ user.email ? user.email : 'Загрузка...' }}</p>
-          <p><strong>Дата регистрации:</strong> {{ formattedDate }}</p>
-            <app-button v-show="!isEditing"
-            @click="editProfile"
-            button-class="edit-profile"
-            >Редактировать <span class="edit">профиль</span></app-button>            
-        </div>
-        </section>
-        <!-- Если флаг isEditing true, показывается форма редактирования профиля -->
-        <section class="editProfile" v-show="isEditing">
-          <h3>Редактирование профиля</h3>
-          <form @submit.prevent="onEdit">
-            <app-input
-              label="Изменить имя пользователя"
-              name="name"
-              iD="name"
-              type="text"
-              input-class="edit-profile-input"
-              v-model="updatedUsername"
-                      
-              placeholder="Введите новое имя пользователя"
-              required
-            ></app-input>
-
-            <app-input
-              label="Изменить email"
-              name="email"
-              iD="email"
-              type="text"
-              input-class="edit-profile-input"
-              v-model="updatedEmail"
-                      
-              placeholder="Введите новый адрес электронной почты"
-              required
-            ></app-input>
-
-            <app-input
-              label="Изменить фото"
-              name="image"
-              iD="image"
-              type="file"
-              input-class="add-recipe-form"
-              @change="handleAvatarChange"
-              required
-            ></app-input>
-            <img v-if="updatedAvatar" :src="previewAvatar" class="avatar-preview" />
-
-            <h3>Изменить пароль</h3>
-
-            <app-input
-              label="Старый пароль"
-              name="old_password"
-              iD="old_password"
-              type="password"
-              input-class="edit-profile-input"
-              v-model="oldPassword"
-                      
-              placeholder="Введите старый пароль"
-              required
-            ></app-input>
-
-            <app-input
-              label="Новый пароль"
-              name="new_password"
-              iD="new_password"
-              type="password"
-              input-class="edit-profile-input"
-              v-model="newPassword"
-                      
-              placeholder="Введите новый пароль"
-              required
-            ></app-input>
-
-            <app-input
-              label="Подтверждение пароля"
-              name="confirm_password"
-              iD="confirm_password"
-              type="password"
-              input-class="edit-profile-input"
-              v-model="confirmPassword"
-                      
-              placeholder="Введите пароль еще раз"
-              required
-            ></app-input>
-
-            <app-button type="submit"
-              @click="savedEdits"
-              button-class="edit-profile"
-              >Сохранить изменения</app-button>
-              <small v-show="isSaving">Сохраняем...</small>
-          </form>          
-        </section>
-        <!-- Если флаг showMessage из store в значении true, показываем уведомление  -->
-        <div class="message-container" v-if="showMessage"> 
-          <app-message position="app-message-profile"/>
+          <!-- Дефолтное изображение (появляется, если нет аватарки или ошибка) -->
+          <img
+              v-else
+              :src="require('@/assets/icons/profile.png')"
+              alt="Дефолтное фото"
+              class="avatar default-avatar"
+          >
         </div>
       </div>
-    </app-page>
+      <div class="details">
+          <p><strong>Имя:</strong> {{ user.username ? user.username : 'Загрузка...' }}</p>
+          <p><strong>Email:</strong> {{ user.email ? user.email : 'Загрузка...' }}</p>
+        <p><strong>Дата регистрации:</strong> {{ formattedDate }}</p>
+          <app-button v-show="!isEditing"
+          @click="editProfile"
+          button-class="edit-profile"
+          >Редактировать <span class="edit">профиль</span></app-button>
+      </div>
+      </section>
+      <!-- Если флаг isEditing true, показывается форма редактирования профиля -->
+      <section class="editProfile" v-show="isEditing">
+        <span class="close-btn" @click="closeEditForm">&times;</span>
+        <h3>Редактирование профиля</h3>
+        <form @submit.prevent="onEdit">
+          <app-input
+            label="Изменить имя пользователя"
+            name="username"
+            iD="name"
+            type="text"
+            input-class="edit-profile-input"
+            v-model="username"
+            @blur="usernameBlur"
+            :error="usernameError || backendErrors.username"
+            @input="backendErrors.username = ''"
+
+            placeholder="Введите новое имя пользователя"
+          ></app-input>
+          <!--При редактировании поля (@input) очищается соответствующая ошибка-->
+          <app-input
+            label="Изменить email"
+            name="email"
+            iD="email"
+            type="text"
+            input-class="edit-profile-input"
+            v-model="email"
+            @blur="emailBlur"
+            :error="emailError || backendErrors.email"
+            @input="backendErrors.email = ''"
+
+            placeholder="Введите новый адрес электронной почты"
+          ></app-input>
+
+          <app-input
+            label="Изменить фото"
+            name="image"
+            iD="image"
+            type="file"
+            input-class="add-recipe-form"
+            @change="handleAvatarChange"
+          ></app-input>
+          <img v-if="previewAvatar" :src="previewAvatar" class="avatar-preview"  alt="Выбранный новый аватар"/>
+
+          <h3>Изменить пароль</h3>
+          <div class="password-input-container-profile">
+            <!-- Показать/скрыть пароль только для поля password c предотвращением (prevent) перезагрузки по клику по умолчанию -->
+            <a href="#" @click.prevent="togglePasswordVisibility"
+               class="password-control" :class="{ view: isPasswordVisible }"
+               :title="isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'">
+            </a>
+            <!-- Поле ввода пароля с изменением типа text/password в зависимости от значения isPasswordVisible
+          для функционала скрыть и показать -->
+            <app-input
+              label="Старый пароль"
+              name="oldPassword"
+              iD="old_password"
+              :type="isPasswordVisible ? 'text' : 'password'"
+              input-class="edit-profile-input"
+              v-model="oldPassword"
+              @blur="oldPasswordBlur"
+              :error="oldPasswordError || backendErrors.oldPassword"
+              @input="backendErrors.oldPassword = ''"
+
+              placeholder="Введите старый пароль"
+            ></app-input>
+          </div>
+
+          <app-input
+            label="Новый пароль"
+            name="newPassword"
+            iD="new_password"
+            :type="isPasswordVisible ? 'text' : 'password'"
+            input-class="edit-profile-input"
+            v-model="newPassword"
+            @blur="newPasswordBlur"
+            :error="newPasswordError || backendErrors.newPassword"
+            @input="backendErrors.newPassword = ''"
+            placeholder="Введите новый пароль"
+          ></app-input>
+
+          <app-input
+            label="Подтверждение пароля"
+            name="confirmPassword"
+            iD="confirm_password"
+            :type="isPasswordVisible ? 'text' : 'password'"
+            input-class="edit-profile-input"
+            v-model="confirmPassword"
+            @blur="confirmPasswordBlur"
+            :error="confirmPasswordError || backendErrors.confirmPassword"
+            @input="backendErrors.confirmPassword = ''"
+            placeholder="Введите пароль еще раз"
+          ></app-input>
+
+          <app-button type="submit"
+            button-class="edit-profile"
+            :disabled="isSubmitting"
+            >Сохранить изменения</app-button>
+            <small v-show="isSaving">Сохраняем...</small>
+        </form>
+      </section>
+      <!-- Если флаг showMessage из store в значении true, показываем уведомление  -->
+      <div class="message-container" v-if="showMessage">
+        <app-message position="app-message-profile"/>
+      </div>
+    </div>
+  </app-page>
 </template>
 
 <script>
@@ -134,148 +150,111 @@ import AppRecipeCard from '@/components/AppRecipeCard.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/AppInput.vue';
 import AppMessage from '@/components/ui/AppMessage.vue';
+import {UseProfileChangeForm} from "@/use/change-profile";
+import store from "@/store/store";
 
 export default defineComponent({
-    setup() {
-    const store = useStore();
+  setup() {
+  const store = useStore();
 
-    const user = computed(() => store.getters['user/user']);
+  const user = computed(() => store.getters['user/user']);
 
-    const updatedUsername = ref(user.value?.username || "");
-    const updatedEmail = ref(user.value?.email || "");
-    const updatedAvatar = ref(null);
+  const isEditing = ref(false); // Флаг для формы редактирования профиля
+  const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
 
-    const oldPassword = ref("");
-    const newPassword = ref("");
-    const confirmPassword = ref("");
+  const userRecipes = computed(() => store.getters['recipe/getUserRecipes'](user.value.id));
 
-    const isEditing = ref(false); // Флаг для формы редактирования профиля
-    const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
+  const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
+  const isPasswordVisible = ref(false);
 
-    const userRecipes = computed(() => store.getters['recipe/getUserRecipes'](user.value.id));
+  const isUserLoaded = ref(false);
 
-    const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
+  // Используем хук и разворачиваем его свойства
+  const profileForm = UseProfileChangeForm();
 
-    const previewAvatar = ref(null);
+  const mediaUrl = ref('http://127.0.0.1:8000/');
 
-    const avatarLoaded = ref(false);
-    const avatarError = ref(false);
+  onMounted(async () => {
+    await store.dispatch('user/fetchUser');
+    profileForm.username.value = user.value?.username || '';
+    profileForm.email.value = user.value?.email || '';
+    isUserLoaded.value = true;
+  });
 
-    const isUserLoaded = ref(false);
+  const editProfile = () => {
+    isEditing.value = true;
+  };
 
-      const handleAvatarLoad = () => {
-        setTimeout(() => {
-          avatarLoaded.value = true;
-        }, 100); // небольшая задержка для плавности
-      };
+  const closeEditForm = () => {
+    isEditing.value = false;
+  };
 
-    const handleAvatarError = () => {
-      avatarError.value = true;
-    };
+  const togglePasswordVisibility = () => {
+    isPasswordVisible.value = !isPasswordVisible.value;
+  };
 
-    const mediaUrl = ref('http://127.0.0.1:8000/');
-    const handleAvatarChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        if (previewAvatar.value) {
-          URL.revokeObjectURL(previewAvatar.value); // Освобождаем старый объект
-        }
-        updatedAvatar.value = file;
-        previewAvatar.value = URL.createObjectURL(file);
-      }
-    };
+  const onEdit = async () => {
+    isSaving.value = true; // Показываем "Сохраняем..."
+    try {
+      await profileForm.onSubmit(); // Вызываем метод onSubmit из хука UseProfileChangeForm
+      // Закрываем форму редактирования после успешного сохранения
+      closeEditForm();
+      store.dispatch("setMessage", {
+        type: "success",
+        text: 'Данные успешно обновлены!',
+        position: "app-message-profile"
+      }, { root: true });
+    } catch (error) {
 
-      onMounted(async () => {
+      store.dispatch("setMessage", {
+        type: "error",
+        text: `Ошибка изменения профиля`,
+        position: "app-message"
+      }, { root: true });
+    } finally {
+      isSaving.value = false; // Сбрасываем состояние загрузки
+    }
+  };
 
-        await store.dispatch('user/fetchUser'); // Загружаем пользователя при монтировании
+  const openRecipe = (recipeId) => {
+    // Навигация к странице рецепта
+    console.log(`Открытие рецепта с ID ${recipeId}`);
+  };
 
-        updatedUsername.value = user.value?.username || ""; // Обновляем updatedUsername
-        updatedEmail.value = user.value?.email || "";       // Обновляем updatedEmail
-
-        isUserLoaded.value = true;
-      });
-
-    const editProfile = () => {
-      isEditing.value = true;
-    };
-
-    const savedEdits = async () => {
-      try {
-        isSaving.value = true; // Показываем сообщение "Сохраняем..."
-
-        const formData = new FormData();
-        formData.append("username", updatedUsername.value);
-        formData.append("email", updatedEmail.value);
-
-        if (updatedAvatar.value) {
-          formData.append("avatar", updatedAvatar.value);
-        }
-
-        await store.dispatch("user/updateUser", formData);
-        await store.dispatch("user/fetchUser"); // Чтобы сразу обновились данные
-
-        // Успешное обновление
-        isEditing.value = false;
-
-        // Сбрасываем значения полей
-        updatedUsername.value = "";
-        updatedEmail.value = "";
-        updatedAvatar.value = null;
-        previewAvatar.value = null;
-
-        store.dispatch("setMessage", { type: "success", text: "Изменения сохранены", position: "app-message-profile",
-          fadingOut: false }, { root: true });
-
-      } catch (error) {
-        console.error("Ошибка обновления профиля:", error);
-        store.dispatch("setMessage", { type: "error", text: "Ошибка при сохранении профиля", position: "app-message-profile" }, { root: true });
-      } finally {
-        isSaving.value = false; // В любом случае скрываем индикатор загрузки
-      }
-    };
-
-    const openRecipe = (recipeId) => {
-      // Навигация к странице рецепта
-      console.log(`Открытие рецепта с ID ${recipeId}`);
-    };
-
-    return {
-      user,
-      updatedUsername,
-      updatedEmail,
-      updatedAvatar,
-      previewAvatar,
-      userRecipes,
-      editProfile,
-      openRecipe,
-      savedEdits,
-      isEditing,
-      isSaving,
-      showMessage,
-      handleAvatarChange,
-      mediaUrl,
-      avatarLoaded,
-      avatarError,
-      handleAvatarLoad,
-      handleAvatarError,
-      isUserLoaded,
-      oldPassword,
-      newPassword,
-      confirmPassword,
-    };
-    },
-    computed: {
-      formattedDate() {
-        if (!this.user || !this.user.date_joined) return 'Загрузка...';
-        return new Date(this.user.date_joined).toLocaleDateString('ru-RU');
-      }
-    },
-
-    components:{AppPage, AppRecipeCard, AppButton, AppInput, AppMessage}
+  return {
+    user,
+    userRecipes,
+    editProfile,
+    openRecipe,
+    isEditing,
+    isSaving,
+    showMessage,
+    mediaUrl,
+    isUserLoaded,
+    onEdit,
+    isPasswordVisible,
+    togglePasswordVisibility,
+    closeEditForm,
+    ...profileForm // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику изменения пароля туда
+  };
+  },
+  computed: {
+    formattedDate() {
+      if (!this.user || !this.user.date_joined) return 'Загрузка...';
+      return new Date(this.user.date_joined).toLocaleDateString('ru-RU');
+    }
+  },
+  components:{AppPage, AppRecipeCard, AppButton, AppInput, AppMessage}
 })
 </script>
 
 <style>
+.password-input-container-profile{
+  position: relative;
+  height: 80px; /* Фиксированная высота контейнера */
+  margin-top: 0;
+}
+
 .profile{
   display: grid;
   grid-template-columns: 65% 35%;
@@ -296,6 +275,7 @@ export default defineComponent({
 }
 
 .editProfile{
+  position: relative;
   display: block;
   text-align: start;
   margin-bottom: 40px;
@@ -313,7 +293,7 @@ export default defineComponent({
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .profile-photo-container {
@@ -401,6 +381,19 @@ label {
   color: #333;
 }
 
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  cursor: pointer;
+  font-size: 24px;
+  color: #666;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #333;
+}
 
 @media (max-width: 1050px) {
   .profile{

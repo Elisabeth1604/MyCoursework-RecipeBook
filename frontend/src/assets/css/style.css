@@ -25,6 +25,27 @@ label{
     font-weight: bold;
 }
 
+/*Различные типы кнопочек (есть общий стиль кнопки, а тут различия)*/
+
+.search-button{
+    margin-left: 5px;
+}
+
+/*Кнопки Подобрать рецепт и Сбросить в фильтрах*/
+.select-button{
+    margin-top: 19px;
+}
+
+/* Кнопка "Состав" */
+.ingredients-button {
+    bottom: 10px;
+}
+
+/* Кнопки свернуть карточку и показать полный рецепт */
+.recipe-card-button {
+    margin: 5px;
+}
+
 [v-cloak] {
     display: none;
-  }
+}

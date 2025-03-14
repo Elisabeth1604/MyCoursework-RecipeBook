@@ -1,17 +1,16 @@
 <template>
-    <router-link to="/">
-        <div class="logo" title="На главную">
-            <img src="..\assets\icons\logo.png" alt="Логотип">
-            <div class="name"><h1>Yummy</h1></div>
-        </div>
-      </router-link>
+  <router-link to="/">
+    <div class="logo" title="На главную">
+      <img src="..\assets\icons\figma1.png" alt="Логотип">
+    </div>
+    </router-link>
 </template>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Alice&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Serif+Display:ital@0;1&family=Macondo&family=Mate:ital@0;1&display=swap');
 .logo {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 a {
@@ -20,20 +19,19 @@ a {
 }
 
 .logo img {
-    height: 50px;
-    margin-right: 10px;
+  height: 50px;
+  margin-right: 10px;
 }
 
 .logo h1 {
-    font-family: "Bricolage Grotesque", sans-serif;
-    font-weight: 650;
-    margin: 0;
-    font-size: 40px
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 650;
+  margin: 0;
+  font-size: 40px
 }
 
 /* Адаптивное поведение для логотипа и текста */
 @media (max-width: 768px) {
-  
   .logo img {
     height: 40px; /* Уменьшение размера логотипа */
     margin-right: 0; /* Убрать отступ при уменьшении экрана */

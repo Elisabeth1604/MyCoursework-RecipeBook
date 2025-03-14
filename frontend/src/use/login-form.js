@@ -15,21 +15,21 @@ export function UseLoginForm(){
     const {value: username, errorMessage: uError, handleBlur: uBlur} = useField(
         'username',
         yup
-            .string() // Интересует тип данных "строка"
+            .string() // Тип данных "строка"
             .trim() // Чтобы не учитывались пробелы
             .required('Пожалуйста, введите имя пользователя') // Поле обязательное
             .matches(/^[a-zA-Z0-9_-]+$/, 'Имя пользователя может содержать только буквы, цифры, _ и -')
         )
 
-    const PASSWORD_MIN_LENGTH = 6
+    const PASSWORD_MIN_LENGTH = 8
 
     const {value: password, errorMessage: pError, handleBlur: pBlur} = useField(
         'password',
          yup
-            .string() // Интересует тип данных "строка"
-            .trim() // Чтобы не учитывались пробелы
-            .required('Пожалуйста, введите пароль') // Поле обязательное
-            .min(PASSWORD_MIN_LENGTH, `Пароль не может быть меньше ${PASSWORD_MIN_LENGTH} символов`) // Пароль дожен состоять минимум из 6 символов
+            .string()
+            .trim()
+            .required('Пожалуйста, введите пароль')
+            .min(PASSWORD_MIN_LENGTH, `Пароль не может быть меньше ${PASSWORD_MIN_LENGTH} символов`)
     )
 
     // Обработка формы

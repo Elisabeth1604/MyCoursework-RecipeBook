@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import generics
@@ -75,3 +75,28 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            print("Request data:", request.data)  # Логируем данные запроса
+            serializer = ChangePasswordSerializer(data=request.data)
+            if serializer.is_valid():
+                user = request.user
+                print("Validated data:", serializer.validated_data)
+                # Проверка старого пароля
+                if not user.check_password(serializer.validated_data['old_password']):
+                    return Response(
+                        {"old_password": "Неверный пароль"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                # Установка нового пароля
+                user.set_password(serializer.validated_data['new_password'])
+                user.save()
+                return Response({"detail": "Пароль успешно изменен!"}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

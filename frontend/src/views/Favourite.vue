@@ -1,9 +1,9 @@
 <template>
-    <app-page title="Сохраненные рецепты"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
-        <div class="favourite-recipes">
+  <app-page title="Сохраненные рецепты"> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
+    <div class="favourite-recipes">
 
-        </div>
-    </app-page>
+    </div>
+  </app-page>
 </template>
 
 <script>
@@ -11,10 +11,10 @@ import { defineComponent } from 'vue'
 import AppPage from '@/components/ui/AppPage.vue';
 
 export default defineComponent({
-    setup() {
-        
-    },
-    components: {AppPage}
+  setup() {
+
+  },
+  components: {AppPage}
 })
 </script>
 

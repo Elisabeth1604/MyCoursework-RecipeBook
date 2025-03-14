@@ -9,7 +9,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-// Нужно получить метаданные текущего роута с помощью UseRoute()
+// Получить метаданные текущего роута с помощью UseRoute()
 import { useRoute } from 'vue-router'
 import { useStore} from 'vuex'
 import { computed } from 'vue'

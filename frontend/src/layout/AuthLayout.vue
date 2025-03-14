@@ -1,14 +1,13 @@
 <template>
-    <router-view/>
-
+  <router-view/>
 </template>
 
 <script>
 import Auth from '@/modal/AuthModal.vue';
 
 export default{
-    setup() {
-        
-    },
+  setup() {
+
+  },
 }
 </script>

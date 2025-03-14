@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost/api/token/';
+const API_URL = 'http://localhost/api/';
 const TOKEN_KEY = 'jwt-token'
 
 import { jwtDecode } from "jwt-decode";
@@ -10,8 +10,8 @@ import router from "@/router/router";
 // Функция для периодической проверки токена
 function startTokenRefresh(store) {
     setInterval(async () => {
-        const token = store.state.token;
-
+        const token = store.state.auth.token;
+        console.log(token);
         if (token) {
             const decoded = jwtDecode(token);
             const now = Math.floor(Date.now() / 1000);
@@ -65,7 +65,7 @@ export default {
         async login({ commit }, { username, password }) {
             try {
                 console.log('Отправляем данные:', { username, password });
-                const response = await axios.post(API_URL, {
+                const response = await axios.post(`${API_URL}token/`, {
                     username: username,
                     password: password
                 });
@@ -84,13 +84,14 @@ export default {
 
         async refreshToken({ commit }) {
             try {
-                const response = await axios.post(`${API_URL}refresh/`, {}, { withCredentials: true });
+                const response = await axios.post(`${API_URL}token/refresh/`, {}, { withCredentials: true });
 
                 commit("setToken", response.data.access);
                 axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.access}`;
             } catch (error) {
                 console.error("Ошибка обновления токена:", error);
                 commit("logout");
+                router.push("/login"); // Перенаправляем на вход
             }
         },
 
@@ -107,7 +108,7 @@ export default {
 
         async register({ dispatch }, { username, email, password, confirmPassword }) {
             try {
-                const response = await axios.post('http://localhost/api/register/', {
+                const response = await axios.post(`${API_URL}register/`, {
                     username,
                     email,
                     password,
@@ -146,6 +147,32 @@ export default {
                     type: "error",
                     text: errorMessage,
                     position: "app-message",
+                }, { root: true });
+                throw error;
+            }
+        },
+
+        async changePassword({ commit, getters }, { oldPassword, newPassword, confirmPassword }) {
+            try {
+
+                const response = await axios.post(
+                    `${API_URL}password/change/`,
+                    { old_password: oldPassword, new_password: newPassword, new_password2: confirmPassword },
+                    { withCredentials: true,
+                            headers: {
+                            Authorization: `Bearer ${getters.token}`, // Явно передаём токен
+                        }, }
+                );
+                return response.data;
+            } catch (error) {
+                let errorMessage = "Ошибка при изменении пароля";
+                if (error.response?.data) {
+                    errorMessage = Object.values(error.response.data).join(" ");
+                }
+                store.dispatch("setMessage", {
+                    type: "error",
+                    text: errorMessage,
+                    position: "app-message-profile"
                 }, { root: true });
                 throw error;
             }

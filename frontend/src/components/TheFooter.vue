@@ -1,10 +1,10 @@
 <template>
   <footer>
     <p>&copy; 2024 Yummy. Все права защищены.</p>
-        <p>
-            <a href="#">Политика конфиденциальности</a> | 
-            <a href="#">Условия использования</a>
-        </p>
+      <p>
+        <a href="#">Политика конфиденциальности</a> |
+        <a href="#">Условия использования</a>
+      </p>
     </footer>
 </template>
 
@@ -15,28 +15,28 @@ export default {
 
 <style scoped>
 footer {
-    background-color: #4c4a49; /* Цвет фона */
-    color: white; /* Цвет текста */
-    text-align: center; /* Выравнивание текста по центру */
-    padding: 10px 0; /* Отступы сверху и снизу */
-    margin-top: 20px;
-    position: relative; /* Относительное позиционирование */
-    bottom: 0; /* Положение внизу */
-    width: 100%; /* Ширина 100% */
+  background-color: #4c4a49; /* Цвет фона */
+  color: white; /* Цвет текста */
+  text-align: center; /* Выравнивание текста по центру */
+  padding: 10px 0; /* Отступы сверху и снизу */
+  margin-top: 20px;
+  position: relative; /* Относительное позиционирование */
+  bottom: 0; /* Положение внизу */
+  width: 100%; /* Ширина 100% */
 }
 
 footer a {
-    color: #ff5722; /* Цвет ссылок */
-    text-decoration: none; /* Убираем подчеркивание */
+  color: #ff5722; /* Цвет ссылок */
+  text-decoration: none; /* Убираем подчеркивание */
 }
 
 footer a:hover {
-    text-decoration: underline; /* Подчеркивание при наведении */
+  text-decoration: underline; /* Подчеркивание при наведении */
 }
 
 @media (max-width: 480px) {
-    p{
-        font-size: 12px;
-    }
+  p{
+      font-size: 12px;
+  }
 }
 </style>

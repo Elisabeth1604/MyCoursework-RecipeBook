@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Subscription, Comment, Favourite
+
+admin.site.register(Subscription)
+admin.site.register(Comment)
+admin.site.register(Favourite)
