@@ -10,6 +10,9 @@
           type="text"
           input-class="add-recipe-form"
           placeholder="Введите название рецепта"
+          v-model.trim="recipe_title"
+          :error="rtError || backendErrors.recipe_title"
+          @blur="rtBlur"
           required
       ></app-input> <!-- trim убирает пробелы в результирующей строке-->
 
@@ -21,6 +24,9 @@
           type="text"
           input-class="add-recipe-form"
           placeholder="Введите описание рецепта"
+          v-model="description"
+          :error="descError"
+          @blur="descBlur"
           required
       ></app-input>
 
@@ -32,21 +38,38 @@
           type="file"
           input-class="add-recipe-form"
           @change="handleImageUpload"
-          required
+          v-model="main_photo"
+          @error="mpError"
+          @blur="mpBlur"
       ></app-input>
 
       <label class="label-steps">Добавьте ингредиенты</label>
       <!-- Поле (компонент) для ДОБАВЛЕНИЯ ИНГРЕДИЕНТОВ рецепта -->
       <div class="form-group">
-        <div v-for="(ingredient, index) in recipe.ingredients" :key="ingredient.name" class="ingredient">
+        <div v-for="(ingredient, index) in recipe.ingredients" :key="ingredient.index" class="ingredient">
           <!-- Поле для названия ингредиента (!потом будет выбор из базы) -->
-          <app-input
-            :label="'Ингредиент ' + (index + 1) + ':'"
-            name="ingredient"
-            type="string"
-            input-class="ingredient-input"
-            required
-        ></app-input>
+          <div class="ingredient-dropdown">
+            <app-input
+                :label="'Ингредиент ' + (index + 1) + ':'"
+                name="ingredient"
+                type="text"
+                input-class="ingredient-input"
+                v-model.trim="ingredient.ingredient_name"
+                placeholder="Введите ингредиент"
+                required
+                @input="onIngredientInput(index)"
+            ></app-input>
+            <!-- Выпадающий список подсказок -->
+            <ul v-if="ingredient.suggestions && ingredient.suggestions.length" class="suggestions">
+              <li
+                  v-for="item in ingredient.suggestions"
+                  :key="item.id"
+                  @mousedown.prevent="selectIngredient(index, item)"
+              >
+                {{ item.ingredient_name }}
+              </li>
+            </ul>
+          </div>
         <!-- Поле для количества ингредиента -->
           <app-input
             label="Количество"
@@ -55,22 +78,14 @@
             type="number"
             input-class="quantity-input"
             required
-        ></app-input>
+          ></app-input>
           <!-- Выпадающий список выбора единиц измерения -->
           <div class="form-group-ingredients">
           <label class="unit-select-label">Единица измерения</label>
           <select v-model="ingredient.unit" class="unit-select" >
-            <option disabled value="">Выберите единицу</option>
-              <option value="граммы">гр</option>
-              <option value="килограммы">кг</option>
-              <option value="литры">л</option>
-              <option value="миллилитры">мл</option>
-              <option value="стаканы">стак.</option>
-              <option value="столовые ложки">стол.л.</option>
-              <option value="чайные ложки">чайн.л.</option>
-              <option value="шт">шт</option>
-              <option value="зубчики">зубч.</option>
-              <option value="щепотки">щепотка</option>
+            <option v-for="unit in units" :key="unit.id" :value="unit.id">
+              {{ unit.unit_name }}
+            </option>
           </select>
           </div>
           <app-button
@@ -94,7 +109,9 @@
             iD="servings"
             type="number"
             input-class="add-recipe-form"
-
+            v-model="servings"
+            :error="servError"
+            @blur="servBlur"
             placeholder="Количество порций"
             required
         ></app-input>
@@ -112,6 +129,9 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Часы"
+              v-model="prep_time_hour"
+              :error="ptHourError"
+              @blur="ptHourBlur"
               required
             ></app-input>
             <span class="time-label">час(ов)</span>
@@ -124,6 +144,9 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Минуты"
+              v-model="prep_time_min"
+              :error="ptMinError"
+              @blur="ptMinBlur"
               required
             ></app-input>
             <span class="time-label">минут</span>
@@ -134,20 +157,11 @@
       <!-- Выпадающий список выбора категории блюда -->
       <div class="form-group">
       <label class="categories-select-label">Категория блюда</label>
-      <select v-model="recipe.category" class="category-select" >
-        <option disabled value="">Выберите категорию</option>
-        <option value="завтраки">Завтраки</option>
-        <option value="закуски">Закуски</option>
-        <option value="напитки">Напитки</option>
-        <option value="основные блюда">Основные блюда</option>
-        <option value="паста и пицца">Паста и пицца</option>
-        <option value="ризотто">Ризотто</option>
-        <option value="салаты">Салаты</option>
-        <option value="соусы и маринады">Соусы и маринады</option>
-        <option value="супы">Супы</option>
-        <option value="сэндвичи">Сэндвичи</option>
-        <option value="выпечка и десерты">Выпечка и десерты</option>
-        <option value="заготовки">Заготовки</option>
+      <select v-model="category" class="category-select" @error="catError" @blur="catBlur">
+        <option value="" disabled selected hidden>Выберите категорию</option>
+        <option v-for="category in categories" :key="category.id" :value="category.id">
+          {{ category.category_name }}
+        </option>
       </select>
       </div>
 
@@ -162,7 +176,7 @@
               <label>Шаг {{ index + 1 }}:</label>
               <textarea class="step-description" v-model="step.description" placeholder="Опишите этот шаг" required></textarea>
               <label>Загрузите изображение для этого шага:</label>
-              <input type="file" @change="handleStepImageUpload(index)" required>
+              <input type="file" @change="handleStepImageUpload($event, index)">
 
               <app-button
               button-class="remove-step"
@@ -183,70 +197,133 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
+import { useAddRecipeForm } from '@/use/add-recipe-form';
+import { useStore } from 'vuex';
+import axios from "axios";
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/AppInput.vue';
-import { useStore } from 'vuex';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 export default defineComponent({
   name: 'AppAddRecipe',
   setup() {
+    document.title='Добавление рецепта | Поделюсь рецептом';
     const store = useStore();
+
+    const units = ref([]);
+    const categories = ref([]);
+
+    const addRecipeForm = useAddRecipeForm();
+    const { backendErrors } = addRecipeForm;
+
+    onMounted(() => {
+      fetchUnits();
+      fetchCategories();
+    });
+
+    const fetchUnits = async () => {
+      try {
+        const response = await axios.get('http://localhost/api/units/');
+        units.value = response.data;
+      } catch (error) {
+        console.error('Ошибка загрузки единиц измерения:', error);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("http://localhost/api/categories/");
+        categories.value = response.data;
+      } catch (error) {
+        console.error("Ошибка получения категорий:", error);
+      }
+    };
 
     const recipe = ref({ // Для создания реактивного объекта recipe используется ref
       id: '', // id рецепта
-      title: '', // Название рецепта
+      recipe_title: '', // Название рецепта
       description: '', // Краткое описание
       image: null, // Изображение блюда
-      prepTime: '0', // Время приготовления
+      prepTimeMin: '0', // Время приготовления
+      prepTimeHour: '0', // Время приготовления
       ingredients: [
-        { name: '', quantity: '', unit: '' }
+        { ingredient: null, ingredient_name: '', quantity: '', unit: '', suggestions: [] }
       ],
       servings: '0',
       category: '',
-      steps: [{ description: '', image: '' }] // Шаги приготовления
+      steps: [{ description: '', photo: '' }] // Шаги приготовления
     });
 
-    const submitRecipe = async () => {
+    const submitRecipe = addRecipeForm.handleSubmit(async (values) => {
       try {
-        console.group('Form data');
-        console.log('ID:', recipe.value.id);
-        console.log('Title:', recipe.value.title);
-        console.log('Description:', recipe.value.description);
-        console.log('Prep Time:', recipe.value.prepTime);
-        console.log('Servings:', recipe.value.servings);
-        console.log('Steps:', recipe.value.steps);
-        console.groupEnd();
+        // Очистка предыдущих ошибок
+        backendErrors.value = {};
 
         // Используем Vuex для отправки рецепта
-        await store.dispatch('addRecipe', {
-          title: recipe.value.title,
-          description: recipe.value.description,
-          prepTime: recipe.value.prepTime,
-          servings: recipe.value.servings,
-          image: recipe.value.image,
-          steps: recipe.value.steps
+        await store.dispatch('recipe/addRecipe', {
+          recipe_title: values.recipe_title,
+          description: values.description,
+          prep_time_min: values.prepTimeMin,
+          prep_time_hour: values.prepTimeHour,
+          servings: values.servings,
+          main_photo: values.image,
+          ingredients: recipe.value.ingredients.map(ing => ({
+            ingredient: ing.ingredient, // id
+            quantity: ing.quantity,
+            unit: ing.unit,
+          })),
+          steps: recipe.value.steps,
+          category: values.category,
         });
 
-        // Очистка формы после отправки
-        resetForm();
+        values.recipe_title=''
+        values.description=''
+        values.prepTimeMin=''
+        values.prepTimeHour=''
+        values.servings=''
+        values.image=''
+        recipe.value.ingredients=[{ ingredient: null, ingredient_name: '', quantity: '', unit: '', suggestions: []}]
+        recipe.value.steps=[{ description: '', photo: '' }]
+        values.category="Любая категория"
+
       } catch (error) {
-        console.error('Ошибка при добавлении рецепта:', error);
+        if (error.response && error.response.data) {
+
+          console.error('Ошибка при добавлении рецепта:', error.response.data);
+
+          // Обрабатываем массив ошибок, сохраняем в `backendErrors`
+          for (const field in error.response.data) {
+            backendErrors.value[field] = error.response.data[field].join(" ");
+          }
+        }
       }
-    };
+    })
 
     const handleImageUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
 
-      const imageStorageRef = storageRef(storage, `images/${file.name}`);
+      // Создаем объект FormData и добавляем в него файл под ключом "image"
+      const formData = new FormData();
+      formData.append('image', file);
+
       try {
-        await uploadBytes(imageStorageRef, file);
-        const downloadURL = await getDownloadURL(imageStorageRef);
+        // Отправляем POST-запрос на endpoint загрузки файлов на вашем бэкенде
+        const response = await axios.post('http://localhost/api/upload/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        // Предполагаем, что сервер возвращает JSON с полем url, содержащим путь к загруженному файлу
+        const downloadURL = response.data.url;
         console.log('Image URL:', downloadURL);
-        
-        // Сохраняем URL изображения
+        // Обновляем как локальное свойство рецепта, так и поле валидации
+        recipe.value.image = downloadURL;
+        main_photo.value = downloadURL; // Это важно, чтобы поле main_photo не оставалось пустым
+
+        // Сохраняем URL изображения в объекте рецепта
         recipe.value.image = downloadURL;
       } catch (error) {
         console.error('Ошибка при загрузке изображения:', error);
@@ -257,21 +334,52 @@ export default defineComponent({
       const file = event.target.files[0];
       if (!file) return;
 
-      const stepImageStorageRef = storageRef(storage, `images/steps/${file.name}`);
+      const formData = new FormData();
+      formData.append('image', file);
+
       try {
-        await uploadBytes(stepImageStorageRef, file);
-        const downloadURL = await getDownloadURL(stepImageStorageRef);
+        const response = await axios.post('http://localhost/api/upload/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const downloadURL = response.data.url;
         console.log('Step Image URL:', downloadURL);
-        
         // Сохраняем URL изображения для шага
-        recipe.value.steps[index].image = downloadURL;
+        recipe.value.steps[index].photo = downloadURL;
       } catch (error) {
         console.error('Ошибка при загрузке изображения для шага:', error);
       }
     };
 
+    // Метод для обработки ввода ингредиента
+    const onIngredientInput = async (index) => {
+      const query = recipe.value.ingredients[index].ingredient_name;
+      if (!query || query.length < 2) {
+        recipe.value.ingredients[index].suggestions = [];
+        return;
+      }
+      try {
+        const response = await axios.get('http://localhost/api/ingredients/', {
+          params: { query }
+        });
+        recipe.value.ingredients[index].suggestions = response.data;
+      } catch (error) {
+        console.error('Ошибка поиска ингредиентов:', error);
+      }
+    };
+
+    // Выбор ингредиента из подсказок
+    const selectIngredient = (index, selectedItem) => {
+      recipe.value.ingredients[index].ingredient = selectedItem.id;
+      // Сохраняем имя ингредиента для отображения в поле ввода
+      recipe.value.ingredients[index].ingredient_name = selectedItem.ingredient_name;
+      recipe.value.ingredients[index].suggestions = [];
+    };
+
     const addIngredient = () => {
-      recipe.value.ingredients.push({ name: '', quantity: '', unit: '' });
+      recipe.value.ingredients.push({ ingredient: null, ingredient_name:'', quantity: '', unit: '' , suggestions: [] });
       console.log('Ингредиент добавлен')
     };
 
@@ -280,7 +388,7 @@ export default defineComponent({
     };
 
     const addStep = () => {
-      recipe.value.steps.push({ description: '', image: null });
+      recipe.value.steps.push({ description: '', photo: null });
     };
 
     const removeStep = (index) => {
@@ -293,7 +401,8 @@ export default defineComponent({
         title: '',
         description: '',
         image: null,
-        prepTime: '0',
+        prepTimeMin: '0',
+        prepTimeHour: '0',
         ingredients: [],
         servings: '0',
         steps: []
@@ -309,13 +418,18 @@ export default defineComponent({
       removeStep,
       addIngredient,
       removeIngredient,
-      resetForm
+      resetForm,
+      units,
+      categories,
+      onIngredientInput,
+      selectIngredient,
+      ...addRecipeForm
     };
   },
-  components:{AppButton, AppInput}
+
+  components: { AppButton, AppInput }
 });
 </script>
-
 
 <style>
 .form-group {
@@ -360,13 +474,15 @@ export default defineComponent({
 
 .category-select{
   width: 40%;
-  height: 35px;  
+  height: 35px;
   margin-right: 10px;
   margin-bottom: 10px;
+  padding: 7px;
   box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
   border-radius: 5px;
   border: 1px solid #ccc;
 }
+
 
 /* Класс для контейнера полей ингредиента (название, количество, единица измерения и кнопка удалить) */
 .ingredient{
@@ -379,6 +495,36 @@ export default defineComponent({
   box-sizing: border-box;
   background-color: #f1f1f1;
   border-radius: 5px;
+}
+
+/* Стили остаются прежними, можно добавить стили для dropdown */
+.ingredient-dropdown {
+  position: relative;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dropdown-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.dropdown-list li:hover {
+  background: #f0f0f0;
 }
 
 /* Контейнер для полей Порции и Время приготовления */

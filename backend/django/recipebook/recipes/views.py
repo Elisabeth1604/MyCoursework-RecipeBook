@@ -1,6 +1,7 @@
 from rest_framework import generics, filters
-from .models import Recipe, Ingredient, Category
-from .serializers import RecipeSerializer, IngredientSerializer, CategorySerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .models import Recipe, Ingredient, Category, Unit
+from .serializers import RecipeSerializer, IngredientSerializer, CategorySerializer, RecipeCreateSerializer, UnitSerializer
 
 '''Поиск
 Если используется базовый поиск через ?search=..., DRF проходит по указанным полям и возвращает рецепты, удовлетворяющие условию.
@@ -10,6 +11,7 @@ from .serializers import RecipeSerializer, IngredientSerializer, CategorySeriali
 class RecipeListCreateView(generics.ListCreateAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter] # Встроенный фильтр DRF SearchFilter для реализации поиска через параметр ?search=
     # Поля, по которым будет осуществляться поиск:
     # - 'recipe_title': ищет по названию рецепта.
@@ -18,6 +20,11 @@ class RecipeListCreateView(generics.ListCreateAPIView):
     #      Ingredient -> ingredient_name, что позволяет искать рецепты по названию ингредиента.
     # - 'category__category_name': ищет по названию категории, к которой привязан рецепт.
     search_fields = ['recipe_title', 'recipeingredient__ingredient__ingredient_name', 'category__category_name']
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return RecipeCreateSerializer
+        return RecipeSerializer
 
 class RecipeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Recipe.objects.all()
@@ -65,3 +72,7 @@ class RecipeFilterView(generics.ListAPIView):
             queryset = queryset.filter(calories_per_100__lte=max_calories)
 
         return queryset
+
+class UnitListView(generics.ListAPIView):
+    queryset = Unit.objects.all()
+    serializer_class = UnitSerializer

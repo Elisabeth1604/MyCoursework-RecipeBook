@@ -4,6 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from .models import Favourite
+from recipes.serializers import RecipeSerializer
+from recipes.models import Recipe
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import generics
@@ -100,3 +103,39 @@ class ChangePasswordView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FavouriteRecipeListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        favourites = Favourite.objects.filter(user=request.user)
+        recipes = [fav.recipe for fav in favourites]
+        serializer = RecipeSerializer(recipes, many=True)
+        return Response(serializer.data)
+
+    def delete(self, request, recipe_id):
+        try:
+            fav = Favourite.objects.get(user=request.user, recipe_id=recipe_id)
+            fav.delete()
+            return Response({"detail": "Рецепт удалён из избранного"}, status=status.HTTP_204_NO_CONTENT)
+        except Favourite.DoesNotExist:
+            return Response({"detail": "Рецепт не найден в избранном"}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request):
+        recipe_id = request.data.get('recipe_id')
+        if not recipe_id:
+            return Response({'detail': 'Не передан ID рецепта'}, status=400)
+
+        # Проверим, что рецепт существует
+        try:
+            recipe = Recipe.objects.get(id=recipe_id)
+        except Recipe.DoesNotExist:
+            return Response({'detail': 'Рецепт не найден'}, status=404)
+
+        # Добавим в избранное, если его ещё там нет
+        favourite, created = Favourite.objects.get_or_create(user=request.user, recipe=recipe)
+        if not created:
+            return Response({'detail': 'Рецепт уже в избранном'}, status=200)
+
+        return Response({'detail': 'Добавлен в избранное'}, status=201)

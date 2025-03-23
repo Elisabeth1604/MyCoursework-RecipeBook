@@ -44,7 +44,6 @@ export default {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
                 commit("setUser", response.data); // Сохраняем данные пользователя
             } catch (error) {
                 console.error("Ошибка загрузки пользователя:", error.response ? error.response.data : error);

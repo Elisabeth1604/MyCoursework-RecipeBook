@@ -159,7 +159,7 @@ export default defineComponent({
     };
   },
 
-  components:{ AppInput, AppButton, AppLink, AppMessage }
+  components: { AppInput, AppButton, AppLink, AppMessage }
 })
 </script>
 

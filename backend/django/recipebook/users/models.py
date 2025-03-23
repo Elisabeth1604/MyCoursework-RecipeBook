@@ -33,8 +33,8 @@ class Comment(models.Model):
 
 
 class Favourite(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="favourites")
-    recipe = models.ForeignKey("recipes.Recipe", on_delete=models.CASCADE, related_name="favourites")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="favourites", db_column='user')
+    recipe = models.ForeignKey("recipes.Recipe", on_delete=models.CASCADE, related_name="favourites", db_column='recipe')
 
     class Meta:
         db_table = 'favourites'

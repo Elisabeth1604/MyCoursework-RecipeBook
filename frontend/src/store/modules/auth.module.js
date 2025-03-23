@@ -72,12 +72,18 @@ export default {
 
                 commit('setToken', response.data.access); // Сохраняем access-токен
                 axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-                store.dispatch("setMessage", { type: "success", text: "Добро пожаловать!", position: "app-message" }, { root: true });
+                store.dispatch(
+                    "setMessage",
+                    { type: "success", text: "Добро пожаловать!", position: "app-message" },
+                    { root: true });
                 commit('hideLoginModal'); // Закрыть модальное окно входа
 
             } catch (error) {
                 console.error('Ошибка авторизации:', error);
-                store.dispatch("setMessage", { type: "error", text: "Ошибка в имени пользователя или пароле!", position: "app-message" }, { root: true });
+                store.dispatch(
+                    "setMessage",
+                    { type: "error", text: "Ошибка в имени пользователя или пароле!", position: "app-message" },
+                    { root: true });
                 throw new Error('Ошибка авторизации');
             }
         },

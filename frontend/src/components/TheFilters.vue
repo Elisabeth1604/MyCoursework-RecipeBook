@@ -101,8 +101,18 @@ export default defineComponent( {
     // Поле калорийности
     const maxCalories = ref(null);
 
+    // Восстановление фильтров из localStorage при загрузке страницы и загрузка категорий
     onMounted(() => {
       fetchCategories();
+
+      const savedFilters = localStorage.getItem("recipeFilters");
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        selectedCategory.value = parsed.selectedCategory || defaultFilters.selectedCategory;
+        includeIngredients.value = parsed.includeIngredients || defaultFilters.includeIngredients;
+        excludeIngredients.value = parsed.excludeIngredients || defaultFilters.excludeIngredients;
+        maxCalories.value = parsed.maxCalories || defaultFilters.maxCalories;
+      }
     });
 
     // Функция сохранения фильтров в localStorage
@@ -115,18 +125,6 @@ export default defineComponent( {
       };
       localStorage.setItem("recipeFilters", JSON.stringify(filters));
     };
-
-    // Восстановление фильтров из localStorage при загрузке страницы
-    onMounted(() => {
-      const savedFilters = localStorage.getItem("recipeFilters");
-      if (savedFilters) {
-        const parsed = JSON.parse(savedFilters);
-        selectedCategory.value = parsed.selectedCategory || defaultFilters.selectedCategory;
-        includeIngredients.value = parsed.includeIngredients || defaultFilters.includeIngredients;
-        excludeIngredients.value = parsed.excludeIngredients || defaultFilters.excludeIngredients;
-        maxCalories.value = parsed.maxCalories || defaultFilters.maxCalories;
-      }
-    });
 
     // Отслеживаем изменения фильтров и сохраняем их
     watch(
@@ -280,35 +278,6 @@ export default defineComponent( {
   padding: 8px;
   font-size: 14px;
 }
-
-.suggestions {
-  position: absolute;
-  top: 100%; /* Располагаем список сразу под полем ввода */
-  left: 0;
-  width: 100%; /* Делаем ширину как у поля ввода */
-  background: white;
-  border: 1px solid #ccc;
-  border-top: none; /* Убираем границу сверху, чтобы не дублировалась */
-  border-radius: 5px;
-  list-style: none;
-  padding: 5px;
-  margin: 0;
-  max-height: 120px;
-  overflow-y: auto;
-  z-index: 10;
-}
-
-.suggestions li {
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
-}
-
-.suggestions li:hover {
-  background: #f0f0f0;
-}
-
 .selected-tags {
   margin-top: 5px;
 }
@@ -334,4 +303,5 @@ export default defineComponent( {
   margin-left: 5px;
   cursor: pointer;
 }
+
 </style>

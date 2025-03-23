@@ -1,5 +1,13 @@
 <template>
   <div :class="['recipe-card', { expanded: isExpanded }]" @click="handleCardClick" title="При нажатии откроется страница рецепта">
+    <button
+        v-if="mode === 'favourite' || mode === 'my'"
+        title = "Удалить"
+        class="delete-btn"
+        @click.stop="confirmDelete"
+    >
+      ✖
+    </button>
     <img class="recipe-card-img"  :src="recipeImage ? `${mediaUrl}${recipeImage}` : require('@/assets/images/fallback.jpg')" alt="Фото рецепта" />
     <div class="recipe-header">
       <div class="kkal" title="Количество калорий на 100 грамм">
@@ -15,9 +23,21 @@
     <p>{{ recipeDescription }}</p>
 
     <div class="card-footer">
-      <app-button v-if="!isExpanded" @click.stop="toggleCard" buttonClass="ingredients-button" title="Развернуть карточку" small>Состав</app-button>
-      <button class="favorite-btn" @click.stop="addToFavourites" v-if="!isExpanded" title="Добавить рецепт в избранное">
-        <img class="favourites-img" :src="require('@/assets/icons/heart.png')" alt="Добавить в избранное" />
+      <app-button
+          v-if="!isExpanded"
+          @click.stop="toggleCard"
+          buttonClass="ingredients-button"
+          title="Развернуть карточку"
+          small>Состав</app-button>
+      <button
+          v-if="mode !== 'favourite' && !isExpanded"
+          class="favorite-btn"
+          @click.stop="addToFavourites(recipeId)"
+          title="Добавить рецепт в избранное">
+        <img
+           class="favourites-img"
+           :src="require('@/assets/icons/heart.png')"
+           alt="Добавить в избранное" />
       </button>
     </div>
 
@@ -36,6 +56,7 @@
   
 <script>
 import AppButton from './AppButton.vue';
+import store from "@/store/store";
 
 export default {
   props: {
@@ -49,6 +70,7 @@ export default {
     calories: Number,
     ingredients: Array, // Это массив объектов {ingredient, quantity}
     isExpanded: Boolean, // Принимаем состояние карточки от родителя
+    mode: String // Этот пропс для режима использования (где отображается карточка, в избранном, на главной и тд)
   },
   data() {
     return {
@@ -65,16 +87,32 @@ export default {
       this.$router.push({ name: 'RecipePage', params: { id: recipeId } });
     },
     toggleCard() {
-      // Эмитим событие для родителя
       this.$emit('toggle-card')
     },
     handleCardClick() {
       // Вызов viewRecipe только при клике вне кнопок
       this.viewRecipe(this.recipeId);
     },
-    addToFavourites() {
-
+    addToFavourites(recipeId) {
+      this.$store.dispatch('recipe/addToFavourites', recipeId)
+      store.dispatch(
+          "setMessage",
+          { type: "success", text: "Рецепт добавлен в избранное!", position: "app-message" },
+          { root: true });
     },
+    confirmDelete() {
+      const message = this.mode === 'favourite'
+          ? 'Удалить рецепт из избранного?'
+          : 'Удалить этот рецепт навсегда?';
+
+      if (confirm(message)) {
+        if (this.mode === 'favourite') {
+          this.$emit('remove-from-favourite', this.recipeId);
+        } else if (this.mode === 'my') {
+          this.$emit('delete-my-recipe', this.recipeId);
+        }
+      }
+    }
   },
   components: {
     'app-button': AppButton,
@@ -84,7 +122,8 @@ export default {
 
 <style scoped>
 /* Карточка рецепта */
-.recipe-card { 
+.recipe-card {
+  position: relative;
   display: flex;
   flex-direction: column; /* Важно для вертикального выравнивания */
   background-color: white;
@@ -110,6 +149,7 @@ export default {
   height: 210px;
   object-fit: cover; /* Часть картинки, которая не поместилась, обрежется без искажений*/
   border-radius: 10px;
+
 }
 
 /* Калорийность и время приготовления */
@@ -199,4 +239,23 @@ ul{
   -webkit-box-orient: vertical; /* Указываем вертикальную ориентацию для box */
   -webkit-line-clamp: 3; /* Ограничиваем количество строк */
 }
+
+.delete-btn {
+  position: absolute;
+  padding: 2px 7px;
+  top: 6px;
+  right: 6px;
+  background: #FF9973;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 0 0px rgba(0, 0, 0, 0); /* Убираю тень, наследованную от обычного button */
+  border-radius: 30%;
+}
+
+.delete-btn:hover{
+  background-color: #ff5722;
+}
+
 </style>

@@ -6,7 +6,8 @@ from .views import (
     UserProfileView,
     logout_view,
     RegisterView,
-    ChangePasswordView
+    ChangePasswordView,
+    FavouriteRecipeListView
 )
 
 urlpatterns = [
@@ -16,4 +17,7 @@ urlpatterns = [
     path('user/', UserProfileView.as_view(), name='user-profile'), # Для получения пользователя
     path('register/', RegisterView.as_view(), name='register'),
     path('password/change/', ChangePasswordView.as_view(), name='change-password'),
+    path('user/favourites/', FavouriteRecipeListView.as_view(), name='user-favourites'),
+    path('user/favourites/<int:recipe_id>/', FavouriteRecipeListView.as_view(), name='remove-from-favourites'),
+
 ]

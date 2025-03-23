@@ -53,9 +53,9 @@ class Recipe(models.Model):
     recipe_title = models.CharField(max_length=255, unique=True)
     description = models.TextField()
     servings = models.IntegerField()
-    prep_time_min = models.IntegerField()
+    prep_time_min = models.IntegerField(blank=True, default=0)
     prep_time_hour = models.IntegerField(blank=True, default=0)
-    main_photo = models.CharField(max_length=255)
+    main_photo = models.CharField(max_length=255, null=True)
     created_at = models.DateField(auto_now_add=True)
     calories_per_100 = models.FloatField(default=0)
 

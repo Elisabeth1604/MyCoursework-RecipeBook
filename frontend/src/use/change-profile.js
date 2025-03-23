@@ -1,10 +1,11 @@
 import { useField, useForm } from 'vee-validate';
 import * as yup from 'yup';
+import { ref } from "vue";
 import { useStore } from 'vuex';
-import {ref} from "vue";
 
 export function UseProfileChangeForm() {
     const PASSWORD_MIN_LENGTH = 8;
+
     const { handleSubmit, isSubmitting } = useForm({
         validationSchema: yup.object({
             oldPassword: yup.string()
@@ -15,6 +16,7 @@ export function UseProfileChangeForm() {
                     then: (schema) => schema.required('Старый пароль обязателен для изменения пароля.'),
                     otherwise: (schema) => schema.notRequired() // Поле не обязательно, если newPassword и confirmPassword пустые
                 }),
+
             newPassword: yup.string()
                 .nullable()
                 .trim()
@@ -24,6 +26,7 @@ export function UseProfileChangeForm() {
                     'Пароль должен состоять из цифр, заглавных и строчных латинских букв.'
                 )
                 .notRequired(), // Поле не обязательно
+
             confirmPassword: yup.string()
                 .trim()
                 .nullable()
@@ -34,13 +37,16 @@ export function UseProfileChangeForm() {
                     otherwise: (schema) => schema.notRequired() // Поле не обязательно, если `newPassword` пустое
                 }),
         }),
+
         initialValues: {
             newPassword: null,
             confirmPassword: null,
             oldPassword: null
         },
+
         context: { values: { newPassword: null, confirmPassword: null, oldPassword: null } } // Явно передаем контекст
     });
+
     const store = useStore();
     const error = ref(null);
     const successMessage = ref(null);
@@ -81,6 +87,7 @@ export function UseProfileChangeForm() {
     const previewAvatar = ref(null);
     const avatarLoaded = ref(false);
     const avatarError = ref(false);
+
     const handleAvatarChange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -102,7 +109,7 @@ export function UseProfileChangeForm() {
         avatarError.value = true;
     };
 
-    // Добавляем объект для ошибок бэкенда
+    // Объект для ошибок бэкенда
     const backendErrors = ref({
         username: '',
         email: '',
@@ -112,7 +119,6 @@ export function UseProfileChangeForm() {
         avatar: ''
     });
 
-    // Отправка формы
     const onSubmit = handleSubmit(async (values) => {
         try {
             Object.keys(backendErrors.value).forEach(key => backendErrors.value[key] = ''); // Сбрасываем ошибки перед отправкой
@@ -134,7 +140,7 @@ export function UseProfileChangeForm() {
                 });
             }
 
-            // Обновляем данные пользователя
+            // Обновление данных пользователя
             await store.dispatch('user/fetchUser');
 
             // Сброс полей
@@ -144,13 +150,12 @@ export function UseProfileChangeForm() {
             newPassword.value = null;
             confirmPassword.value = null;
 
-            // Успешное сообщение
             successMessage.value = 'Данные успешно обновлены!';
             console.log(successMessage.value)
             error.value = null;
 
         } catch (error) {
-            console.log("DEBUG: Данные ответа:", error.response?.data);  // Логируем данные ответа
+            console.log("DEBUG: Данные ответа:", error.response?.data);
             if (error.response?.data) {
                 // Обрабатываем ошибки валидации Django
                 const fieldMap = {
@@ -171,11 +176,10 @@ export function UseProfileChangeForm() {
             // Пробрасываем ошибку дальше, чтобы её можно было обработать в onEdit
             throw error;
         }
-
     });
 
     return {
-        // Поля
+        // Поля формы
         username,
         email,
         avatar,
@@ -184,7 +188,7 @@ export function UseProfileChangeForm() {
         newPassword,
         confirmPassword,
 
-        // Валидация
+        // Ошибки валидации
         usernameError,
         emailError,
         oldPasswordError,

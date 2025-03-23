@@ -13,7 +13,9 @@
                        :servings="recipe.servings"
                        :calories="recipe.calories_per_100"
                        :is-expanded="expandedCardId === recipe.id"
-                       @toggle-card="toggleCard(recipe.id)"/>
+                       @toggle-card="toggleCard(recipe.id)"
+                       mode="my"
+                       @delete-my-recipe="handleDelete"/>
     </div>
     <div v-else>
       <p>У вас ещё нет добавленных рецептов
@@ -29,6 +31,7 @@ import { useStore } from 'vuex';
 import AppPage from '@/components/ui/AppPage.vue';
 import AppRecipeCard from "@/components/AppRecipeCard.vue";
 import RecipeCard from "@/components/AppRecipeCard.vue";
+import store from "@/store/store";
 
 export default defineComponent({
   name: 'MyRecipes',
@@ -50,14 +53,21 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      // Загрузить пользователя
       await store.dispatch('recipe/fetchRecipes');
     });
+
+    const handleDelete = () => {
+      store.dispatch(
+          "setMessage",
+          { type: "success", text: "Рецепт удален!", position: "app-message" },
+          { root: true });
+    };
 
     return {
       myRecipes,
       toggleCard,
-      expandedCardId
+      expandedCardId,
+      handleDelete
     };
   },
   components:{RecipeCard, AppPage, AppRecipeCard}
