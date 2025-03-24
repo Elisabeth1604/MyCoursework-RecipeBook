@@ -1,0 +1,4 @@
+*.vue linguist-detectable
+*.js linguist-detectable
+*.css linguist-detectable
+frontend/* linguist-detectable
