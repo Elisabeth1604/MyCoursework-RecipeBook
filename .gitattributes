@@ -1,4 +1,4 @@
-*.vue linguist-detectable
-*.js linguist-detectable
-*.css linguist-detectable
+*.vue linguist-language=Vue
+*.js linguist-language=JavaScript
+*.css linguist-language=CSS
 frontend/* linguist-detectable
