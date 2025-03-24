@@ -17,16 +17,9 @@ export function useAddRecipeForm() {
             .trim()
             .required('Описание обязательно.'),
 
-        prep_time_min: yup.number()
-            .min(0, 'Отрицательное значение.')
-            .required('Введите время приготовления (минуты).'),
-
-        prep_time_hour: yup.number()
-            .min(0, 'Отрицательное значение.')
-            .required('Введите время приготовления (часы).'),
-
         servings: yup.number()
             .min(1, 'Не менее 1.')
+            .typeError("Введите количество порций.")
             .required('Введите количество порций.'),
 
         category: yup.string()
@@ -65,7 +58,7 @@ export function useAddRecipeForm() {
     });
 
     // Инициализируем форму с данной схемой
-    const { handleSubmit, isSubmitting} = useForm({ validationSchema: schema } );
+    const { handleSubmit, isSubmitting, resetForm} = useForm({ validationSchema: schema } );
 
     // Поля формы
     const {
@@ -79,24 +72,6 @@ export function useAddRecipeForm() {
         errorMessage: descError,
         handleBlur: descBlur,
     } = useField('description');
-
-    const {
-        value: main_photo,
-        errorMessage: mpError,
-        handleBlur: mpBlur,
-    } = useField('main_photo');
-
-    const {
-        value: prep_time_min,
-        errorMessage: ptMinError,
-        handleBlur: ptMinBlur,
-    } = useField('prep_time_min');
-
-    const {
-        value: prep_time_hour,
-        errorMessage: ptHourError,
-        handleBlur: ptHourBlur,
-    } = useField('prep_time_hour');
 
     const {
         value: servings,
@@ -121,18 +96,6 @@ export function useAddRecipeForm() {
         descError,
         descBlur,
 
-        main_photo,
-        mpError,
-        mpBlur,
-
-        prep_time_min,
-        ptMinError,
-        ptMinBlur,
-
-        prep_time_hour,
-        ptHourError,
-        ptHourBlur,
-
         servings,
         servError,
         servBlur,
@@ -144,5 +107,6 @@ export function useAddRecipeForm() {
         isSubmitting,
         handleSubmit,
         backendErrors,
+        resetForm
     };
 }

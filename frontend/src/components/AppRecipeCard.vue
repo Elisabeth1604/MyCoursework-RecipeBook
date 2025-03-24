@@ -30,15 +30,20 @@
           title="Развернуть карточку"
           small>Состав</app-button>
       <button
-          v-if="mode !== 'favourite' && !isExpanded"
+          v-if="mode !== 'favourite' && mode !== 'my'&& !isExpanded"
           class="favorite-btn"
           @click.stop="addToFavourites(recipeId)"
           title="Добавить рецепт в избранное">
         <img
            class="favourites-img"
            :src="require('@/assets/icons/heart.png')"
-           alt="Добавить в избранное" />
+           alt="Добавить в избранное"/>
       </button>
+      <button
+          v-if="mode === 'my'&& !isExpanded"
+          @click.stop="editRecipe(recipeId)"
+          title="Редактировать рецепт"
+      >Редактировать</button>
     </div>
 
     <div v-if="isExpanded" class="card-ingredients">
@@ -69,6 +74,7 @@ export default {
     servings: Number,
     calories: Number,
     ingredients: Array, // Это массив объектов {ingredient, quantity}
+    isPublic: Boolean,
     isExpanded: Boolean, // Принимаем состояние карточки от родителя
     mode: String // Этот пропс для режима использования (где отображается карточка, в избранном, на главной и тд)
   },
@@ -112,6 +118,9 @@ export default {
           this.$emit('delete-my-recipe', this.recipeId);
         }
       }
+    },
+    editRecipe(){
+
     }
   },
   components: {
@@ -250,12 +259,13 @@ ul{
   font-size: 15px;
   cursor: pointer;
   color: white;
-  box-shadow: 0 0 0px rgba(0, 0, 0, 0); /* Убираю тень, наследованную от обычного button */
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0); /* Убираю тень, наследованную от обычного button */
   border-radius: 30%;
 }
 
 .delete-btn:hover{
   background-color: #ff5722;
 }
+
 
 </style>

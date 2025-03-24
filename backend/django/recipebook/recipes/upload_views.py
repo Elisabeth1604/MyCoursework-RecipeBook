@@ -11,7 +11,7 @@ class FileUploadView(APIView):
     """
     Эндпоинт для загрузки файлов.
     Принимает POST-запрос с файлом под ключом 'image'.
-    Сохраняет файл в media/uploads/ и возвращает полный URL сохранённого файла.
+    Сохраняет файл в media/recipes/ и возвращает полный URL сохранённого файла.
     """
 
     def post(self, request, format=None):
@@ -24,7 +24,7 @@ class FileUploadView(APIView):
         # Опционально: можно добавить проверку типа файла или размера
 
         # Определяем путь для сохранения: media/uploads/имя_файла
-        upload_folder = 'uploads'
+        upload_folder = 'recipes'
         # Генерируем уникальное имя файла, чтобы избежать коллизий (например, с помощью timestamp)
         from time import time
         unique_filename = f"{int(time())}_{file.name}"
@@ -32,9 +32,9 @@ class FileUploadView(APIView):
 
         # Сохраняем файл через default_storage
         path = default_storage.save(upload_path, ContentFile(file.read()))
-        # Получаем URL сохранённого файла (например, "/media/uploads/...")
+        # Получаем URL сохранённого файла (например, "/media/recipes/...")
         file_url = default_storage.url(path)
         # Строим абсолютный URL, добавляя домен
-        full_url = request.build_absolute_uri(file_url)
+        #full_url = request.build_absolute_uri(file_url)
 
-        return Response({"url": full_url}, status=status.HTTP_201_CREATED)
+        return Response({"url": file_url}, status=status.HTTP_201_CREATED)

@@ -19,7 +19,7 @@
     :placeholder="placeholder"
     :value="modelValue"
     autocomplete="off"
-    :min="type==='number' ? '1' :'null'"
+    :min="type==='number' ? '0' :'null'"
     @input="change"
     @blur="handleBlur">
 

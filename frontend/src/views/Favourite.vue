@@ -13,6 +13,7 @@
                        :servings="recipe.servings"
                        :calories="recipe.calories_per_100"
                        :is-expanded="expandedCardId === recipe.id"
+                       :is-public=true
                        @toggle-card="toggleCard(recipe.id)"
                        mode="favourite"
                        @remove-from-favourite="removeFavourite"/>

@@ -38,7 +38,6 @@
           type="file"
           input-class="add-recipe-form"
           @change="handleImageUpload"
-          v-model="main_photo"
           @error="mpError"
           @blur="mpBlur"
       ></app-input>
@@ -129,10 +128,7 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Часы"
-              v-model="prep_time_hour"
-              :error="ptHourError"
-              @blur="ptHourBlur"
-              required
+              v-model.number="prep_time_hour"
             ></app-input>
             <span class="time-label">час(ов)</span>
 
@@ -144,10 +140,7 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Минуты"
-              v-model="prep_time_min"
-              :error="ptMinError"
-              @blur="ptMinBlur"
-              required
+              v-model.number="prep_time_min"
             ></app-input>
             <span class="time-label">минут</span>
           </div>
@@ -190,9 +183,15 @@
           >Добавить шаг</app-button>
       </div>
 
+      <label class="is_public">
+        <input type="checkbox" class="checkbox-input" v-model="recipe.is_public" />
+        Сделать рецепт общедоступным
+      </label>
+
       <app-button type="submit"
       button-class="submit-btn"
       >Отправить рецепт</app-button>
+
     </form>
 </template>
 
@@ -203,6 +202,7 @@ import { useStore } from 'vuex';
 import axios from "axios";
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/AppInput.vue';
+import store from "@/store/store";
 
 
 export default defineComponent({
@@ -215,7 +215,8 @@ export default defineComponent({
     const categories = ref([]);
 
     const addRecipeForm = useAddRecipeForm();
-    const { backendErrors } = addRecipeForm;
+    const { backendErrors,
+            resetForm } = addRecipeForm;
 
     onMounted(() => {
       fetchUnits();
@@ -240,19 +241,16 @@ export default defineComponent({
       }
     };
 
-    const recipe = ref({ // Для создания реактивного объекта recipe используется ref
-      id: '', // id рецепта
-      recipe_title: '', // Название рецепта
-      description: '', // Краткое описание
-      image: null, // Изображение блюда
-      prepTimeMin: '0', // Время приготовления
-      prepTimeHour: '0', // Время приготовления
+    const recipe = ref({ // Реактивный объект рецепта (здесь только поля, которых нет в блоке с vee-validate)
+      id: null, // id рецепта
+      main_photo: null, // Изображение блюда
+      prep_time_min: null,
+      prep_time_hour: null,
       ingredients: [
         { ingredient: null, ingredient_name: '', quantity: '', unit: '', suggestions: [] }
       ],
-      servings: '0',
-      category: '',
-      steps: [{ description: '', photo: '' }] // Шаги приготовления
+      steps: [{ description: '', photo: '' }], // Шаги приготовления
+      is_public: true
     });
 
     const submitRecipe = addRecipeForm.handleSubmit(async (values) => {
@@ -264,10 +262,10 @@ export default defineComponent({
         await store.dispatch('recipe/addRecipe', {
           recipe_title: values.recipe_title,
           description: values.description,
-          prep_time_min: values.prepTimeMin,
-          prep_time_hour: values.prepTimeHour,
+          prep_time_min: values.prep_time_min,
+          prep_time_hour: values.prep_time_hour,
           servings: values.servings,
-          main_photo: values.image,
+          main_photo: recipe.value.main_photo,
           ingredients: recipe.value.ingredients.map(ing => ({
             ingredient: ing.ingredient, // id
             quantity: ing.quantity,
@@ -275,17 +273,33 @@ export default defineComponent({
           })),
           steps: recipe.value.steps,
           category: values.category,
+          is_public: recipe.value.is_public
         });
 
-        values.recipe_title=''
-        values.description=''
-        values.prepTimeMin=''
-        values.prepTimeHour=''
-        values.servings=''
-        values.image=''
-        recipe.value.ingredients=[{ ingredient: null, ingredient_name: '', quantity: '', unit: '', suggestions: []}]
-        recipe.value.steps=[{ description: '', photo: '' }]
-        values.category="Любая категория"
+        // Очистка полей после отправки
+
+        resetForm(); // Очищаются те, которые в vee-validate
+
+        // Очищаются те, которые в ref recipe
+        recipe.value = {
+          id: null,
+          main_photo: null,
+          prep_time_min: null,
+          prep_time_hour: null,
+          ingredients: [
+            { ingredient: null, ingredient_name: '', quantity: '', unit: '', suggestions: [] }
+          ],
+          steps: [{ description: '', photo: '' }],
+          is_public: true,
+        };
+
+        backendErrors.value = {};
+
+        store.dispatch(
+            "setMessage",
+            { type: "success", text: `Рецепт добавлен!`, position: "app-message" },
+            { root: true }
+        );
 
       } catch (error) {
         if (error.response && error.response.data) {
@@ -296,6 +310,12 @@ export default defineComponent({
           for (const field in error.response.data) {
             backendErrors.value[field] = error.response.data[field].join(" ");
           }
+
+          store.dispatch(
+              "setMessage",
+              { type: "error", text: `${error.response.data.recipe_title}`, position: "app-message" },
+              { root: true }
+          );
         }
       }
     })
@@ -320,11 +340,8 @@ export default defineComponent({
         const downloadURL = response.data.url;
         console.log('Image URL:', downloadURL);
         // Обновляем как локальное свойство рецепта, так и поле валидации
-        recipe.value.image = downloadURL;
-        main_photo.value = downloadURL; // Это важно, чтобы поле main_photo не оставалось пустым
+        recipe.value.main_photo = downloadURL;
 
-        // Сохраняем URL изображения в объекте рецепта
-        recipe.value.image = downloadURL;
       } catch (error) {
         console.error('Ошибка при загрузке изображения:', error);
       }
@@ -395,19 +412,6 @@ export default defineComponent({
       recipe.value.steps.splice(index, 1);
     };
 
-    const resetForm = () => {
-      recipe.value = {
-        id: '',
-        title: '',
-        description: '',
-        image: null,
-        prepTimeMin: '0',
-        prepTimeHour: '0',
-        ingredients: [],
-        servings: '0',
-        steps: []
-      };
-    };
 
     return {
       recipe,
@@ -418,11 +422,11 @@ export default defineComponent({
       removeStep,
       addIngredient,
       removeIngredient,
-      resetForm,
       units,
       categories,
       onIngredientInput,
       selectIngredient,
+
       ...addRecipeForm
     };
   },
@@ -620,6 +624,30 @@ label {
   color: #6c6b6b;
   font-style:italic;
   font-size:15px
+}
+
+.is_public{
+  margin-bottom: 15px;
+}
+
+/* Стилизация чекбокса */
+.checkbox-input {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid #FF9973;
+  border-radius: 0.25rem;
+  background-color: #fff;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  margin: 0;
+}
+
+/* Оформление состояния checked */
+.checkbox-input:checked{
+  background-color: white;
+  color: white;
+  background-image: url("@/assets/icons/checkbox.png");
 }
 
 /* Адаптивность */

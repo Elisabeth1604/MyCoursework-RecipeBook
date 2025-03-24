@@ -73,7 +73,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         # Укажите те поля, которые будут передаваться при создании рецепта
-        fields = ['recipe_title', 'description', 'servings', 'prep_time_min', 'prep_time_hour', 'main_photo', 'category', 'ingredients', 'steps']
+        fields = ['recipe_title', 'description', 'servings', 'prep_time_min', 'prep_time_hour',
+                  'main_photo', 'category', 'ingredients', 'steps', 'is_public']
 
     def create(self, validated_data):
         # Извлекаем вложенные данные

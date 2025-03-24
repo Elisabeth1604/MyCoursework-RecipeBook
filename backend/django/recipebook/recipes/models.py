@@ -58,6 +58,7 @@ class Recipe(models.Model):
     main_photo = models.CharField(max_length=255, null=True)
     created_at = models.DateField(auto_now_add=True)
     calories_per_100 = models.FloatField(default=0)
+    is_public = models.BooleanField(default=True, verbose_name='Публичный рецепт')
 
     user = models.ForeignKey("users.CustomUser", on_delete=models.CASCADE, related_name="recipes", db_column='user')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="recipes", db_column='category')

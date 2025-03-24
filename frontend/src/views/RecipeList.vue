@@ -1,8 +1,8 @@
 <template>
   <app-page title="Последние рецепты" filters> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
-    <div class="recipes" ref="recipeGrid" v-if="recipes && recipes.length">
+    <div class="recipes" ref="recipeGrid" v-if="publicRecipes && publicRecipes.length">
       <recipe-card
-          v-for="item in recipes"
+          v-for="item in publicRecipes"
           :key="item.id"
           :recipe-id="item.id"
           :recipe-title="item.recipe_title"
@@ -14,6 +14,7 @@
           :servings="item.servings"
           :calories="item.calories_per_100"
           :is-expanded="expandedCardId === item.id"
+          :is-public=true
           @toggle-card="toggleCard(item.id)"
       />
     </div>
@@ -40,6 +41,10 @@ export default {
     const store = useStore();
 
     const recipes = computed(() => store.getters['recipe/allRecipes']);
+
+    const publicRecipes = computed( () => {
+      return recipes.value.filter(recipe => recipe.is_public)
+    });
    
     const toggleCard = (id) => {
       expandedCardId.value = expandedCardId.value === id ? null : id;
@@ -52,6 +57,7 @@ export default {
     return {
       expandedCardId,
       recipes,
+      publicRecipes,
       toggleCard
     };
   },
