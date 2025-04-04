@@ -1,5 +1,5 @@
 <template>
-  <div class ="search-form">
+  <div class ="search-form" v-if="route.path !== '/add-recipe'">
     <input class ="search-form_txt"
            id="search-form_txt"
            type="text"
@@ -17,17 +17,23 @@
 <script>
 import {defineComponent, ref} from 'vue'
 import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import AppButton from './AppButton.vue';
+import router from "@/router/router";
 
 export default defineComponent({
   setup() {
     const store = useStore();
+    const route = useRoute();
     const searchQuery = ref(''); // Локальное состояние для поискового запроса
 
     const search = () => {
       // Если значение запроса не пустое (с удалёнными пробелами)
       if (searchQuery.value.trim()) {
-        store.dispatch('recipe/searchRecipes', searchQuery.value);
+        if (route.path === '/favourite')
+          store.dispatch('recipe/searchRecipesFavourites', searchQuery.value);
+        if (route.path === '/' || route.path === '/my-recipes')
+          store.dispatch('recipe/searchRecipes', searchQuery.value);
       }
       else{
         store.dispatch('recipe/fetchRecipes')
@@ -36,6 +42,7 @@ export default defineComponent({
     return {
       searchQuery,
       search,
+      route
     };
   },
   components:{ AppButton }

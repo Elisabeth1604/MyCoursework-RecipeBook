@@ -3,6 +3,7 @@
        <auth-layout></auth-layout>
        <reg-layout></reg-layout> -->
   <div v-cloak> <!--Элементы становятся видимыми только когда страница полностью отрендерится-->
+    <app-loader/>
     <component :is="layout+'-layout'" v-if="layout"></component> <!--Конкатенируем сам layout из meta с оставшейся строкой и получаем название, динамический компонент-->
   </div>
 </template>
@@ -21,6 +22,7 @@ import RecipePageLayout from './layout/RecipePageLayout.vue';
 import FavouriteLayout from './layout/FavouriteLayout.vue';
 import ProfileLayout from './layout/ProfileLayout.vue';
 import MyRecipesLayout from './layout/MyRecipesLayout.vue';
+import AppLoader from "@/components/ui/AppLoader.vue";
 
 export default{
   setup() {
@@ -40,7 +42,8 @@ export default{
     'recipe-page-layout': RecipePageLayout,
     'favourite-layout': FavouriteLayout,
     'profile-layout' : ProfileLayout,
-    'my-recipes-layout' : MyRecipesLayout
+    'my-recipes-layout' : MyRecipesLayout,
+    'app-loader': AppLoader
   }
 }
 </script>

@@ -11,7 +11,7 @@
     <!-- Автор рецепта -->
       <div class="author">
           <img :src="recipe.user.avatar ? `${mediaUrl}${recipe.user.avatar}` : require('@/assets/icons/profile.png')" alt="Фото автора рецепта">
-          <p class="recipe-author" >Автор: <a href="#" title="Перейти в профиль автора">{{ recipe.user.username }}</a></p>
+          <p class="recipe-author" >Автор: <a :href="`/profile/${recipe.user.id}`" title="Перейти в профиль автора">{{ recipe.user.username }}</a></p>
       </div>
     <!-- Блок с фото и количеством порций -->
     <div class="recipe-header">
@@ -33,16 +33,17 @@
         </div>
         <!-- Ингредиенты -->
         <div class="ingredients">
-        <ul>
-          <li v-for="ingredient in adjustedIngredients" :key="ingredient.name" class="ingredient-item">
-          <span class="ingredient-name">{{ ingredient.name }}</span>
-          <div class="ingredient-divider"></div> <!-- Линия между названием и количеством -->
-          <div class="ingredient-details">
-            <span class="ingredient-amount">{{ ingredient.amount }}</span>
-            <span class="ingredient-unit">{{ ingredient.unit }}</span>
-          </div>
-          </li>
-        </ul>
+          <ul>
+            <li v-for="ingredient in adjustedIngredients" :key="ingredient.name" class="ingredient-item">
+              <span class="ingredient-name">{{ ingredient.name }}</span>
+              <div class="ingredient-divider"></div> <!-- Линия между названием и количеством -->
+              <div class="ingredient-details">
+                <span class="ingredient-amount" v-if="ingredient.amount!=='0.0'">{{ ingredient.amount }}</span>
+                <span class="ingredient-amount" v-else></span>
+                <span class="ingredient-unit">{{ ingredient.unit }}</span>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -123,6 +124,7 @@ export default {
       if (recipe.value) {
         store.dispatch('recipe/setRecipe', recipe.value); // Устанавливаем текущий рецепт
         console.log(recipe.value.main_photo)
+        console.log(adjustedIngredients.value)
       }
     });
 

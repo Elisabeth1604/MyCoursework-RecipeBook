@@ -17,7 +17,8 @@ export default createStore({
     return {
       mediaUrl: 'http://127.0.0.1:8000/', // Централизованный URL медиафайлов
       message: null, // Сообщения об ошибках, успехе или предупреждении
-      showMessage: false // Флаг для отображения сообщения
+      showMessage: false, // Флаг для отображения сообщения
+      globalLoader: false,
     };
   },
   getters: {
@@ -27,6 +28,9 @@ export default createStore({
     },
     showMessage(state) {
       return state.showMessage;
+    },
+    showGlobalLoader(state) {
+      return state.globalLoader;
     }
   },
   mutations: {
@@ -37,6 +41,9 @@ export default createStore({
     clearMessage(state){ //Очищение сообщения
       state.message = null;
       state.showMessage = false;
+    },
+    setGlobalLoader(state, status) {
+      state.globalLoader = status;
     }
   },
   actions: {

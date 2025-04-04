@@ -76,7 +76,6 @@
             name="quantity"
             type="number"
             input-class="quantity-input"
-            required
           ></app-input>
           <!-- Выпадающий список выбора единиц измерения -->
           <div class="form-group-ingredients">
@@ -128,7 +127,7 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Часы"
-              v-model.number="prep_time_hour"
+              v-model.number="recipe.prep_time_hour"
             ></app-input>
             <span class="time-label">час(ов)</span>
 
@@ -140,7 +139,7 @@
               type="number"
               input-class="prep-time-input"
               placeholder="Минуты"
-              v-model.number="prep_time_min"
+              v-model.number="recipe.prep_time_min"
             ></app-input>
             <span class="time-label">минут</span>
           </div>

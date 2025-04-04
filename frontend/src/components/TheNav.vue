@@ -23,9 +23,6 @@
         >Войти</app-button>
         <!-- Выпадающее меню -->
         <ul class="dropdown-menu" v-if="isAuth">
-          <li><a @click="handleProfile">
-              <img :src="require('@/assets/icons/profile.png')" alt="Иконка профиля" class="dropdown-menu-icon">Мой профиль</a></li>
-          <hr>
           <li><a @click="handleMyRecipes">
               <img :src="require('@/assets/icons/food.png')" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</a></li>
           <hr>
@@ -92,6 +89,7 @@ export default defineComponent({
 
     const handleProfile = () => { // Обработчик нажатия Профиль
       router.push('/profile');
+      store.dispatch('user/fetchUser');
     }
 
     const handleMyRecipes = () => { // Обработчик нажатия Мои рецепты
@@ -150,7 +148,6 @@ export default defineComponent({
 
 /* Выпадающее меню */
 .dropdown-menu {
-  display: none; /* По умолчанию скрыто */
   position: absolute;
   top: 100%;
   right: 0;
@@ -163,6 +160,14 @@ export default defineComponent({
   margin-top: 0;
   width: 150px; /* Ширина выпадающего меню */
   border-radius: 5px;
+  /* Анимационные свойства */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition:
+      opacity 0.2s ease-out,
+      transform 0.2s ease-out,
+      visibility 0.2s ease-out;
 }
 
 /* Стили для элементов выпадающего меню */
@@ -177,6 +182,7 @@ export default defineComponent({
   color: #333;
   display: block;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .dropdown-menu li a:hover {
@@ -195,7 +201,9 @@ export default defineComponent({
 
 /* Показ меню при наведении на кнопку Профиль */
 .profile-menu-container:hover .dropdown-menu {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 hr{
@@ -213,7 +221,26 @@ hr{
 
 @media (max-width: 1100px) {
   .nav-buttons {
-    display: none; /* Скрываем кнопки на малых экранах */
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    flex-direction: column;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    border-radius: 5px;
+    align-items: flex-start;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    max-height: 0;
+    opacity: 0;
+    overflow: visible;
+    transform: translateY(-10px);
+    transition:
+        transform 0.2s ease-out,
+        opacity 0.3s ease-out,
+        visibility 0.2s ease-out;
   }
 
   .menu-icon {
@@ -226,9 +253,8 @@ hr{
     height: auto; /* Поддерживаем пропорции */
   }
 
-  /* Когда меню открыто (класс open добавляется через JS) */
+  /* Когда меню открыто*/
   .nav-buttons.open {
-    display: flex; /* Показываем кнопки при нажатии на меню */
     flex-direction: column;
     position: absolute;
     top: 65px;
@@ -239,6 +265,11 @@ hr{
     z-index: 10;
     border-radius: 5px;
     align-items: flex-start;
+
+    max-height: 500px; /* Достаточно для всего меню */
+    opacity: 1;
+    overflow: visible;
+    transform: translateY(0);
   }
 }
 

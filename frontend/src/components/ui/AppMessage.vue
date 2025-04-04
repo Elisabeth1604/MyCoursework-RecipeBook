@@ -99,7 +99,7 @@ export default {
 }
 
 /* Стили для предупреждающего уведомления */
-.app-message.warning.app-message-profile.warning {
+.app-message.warning, .app-message-profile.warning {
   background-color: #fff3cd; /* Цвет фона */
   border-left: 5px solid #ffc107; /* Цвет и ширина левой границы */
   color: #856404; /* Цвет текста */

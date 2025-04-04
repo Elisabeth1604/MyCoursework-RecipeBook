@@ -46,9 +46,17 @@ const routes = [
       auth: true
     }
   },
-  { // Доступен с авторизацией (профиль пользователя)
-    path: '/profile',
+  { // Доступен без авторизации (профиль другого пользователя)
+    path: '/profile/:userId',
     name: 'Profile',
+    component: () => import('../views/Profile.vue'), // Ленивая загрузка компонента профиля (только когда он нужен)
+    meta:{
+      layout: 'profile', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'profile'
+    }
+  },
+  { // Доступен с авторизацией (свой профиль)
+    path: '/profile',
+    name: 'MyProfile',
     component: () => import('../views/Profile.vue'), // Ленивая загрузка компонента профиля (только когда он нужен)
     meta:{
       layout: 'profile', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'profile'
@@ -78,19 +86,35 @@ const router = createRouter({
 })
 
 // Вызывается перед загрузкой страницы
-router.beforeEach((to, from, next) => {
-  const requireAuth = to.meta.auth
+let routeStartTime = 0;
 
-  if(requireAuth && store.getters['auth/isAuthenticated']){
-    next() // Если пользователь авторизован, переходим на новую страницу
-  } else if(requireAuth && !store.getters['auth/isAuthenticated']){
-    alert('Вы должны быть авторизованы, чтобы получить доступ к этой странице.');
+router.beforeEach((to, from, next) => {
+  const requireAuth = to.meta.auth;
+  routeStartTime = Date.now(); // запоминаем старт
+
+  store.commit('setGlobalLoader', true);
+
+  if (requireAuth && !store.getters['auth/isAuthenticated']) {
     store.commit('auth/showLoginModal');
-    next(false) // Прерываем переход на страницу (изменить на false потом!!!!)
-    
-  } else{
-    next()
+    store.dispatch("setMessage", {
+      type: "warning",
+      text: 'Пожалуйста, зарегистрируйтесь и попробуйте снова!',
+      position: "app-message"
+    });
+    next(false); // отменяем переход
+  } else {
+    next(); // продолжаем переход
   }
-})
+});
+
+router.afterEach(() => {
+  const elapsed = Date.now() - routeStartTime;
+  const remaining = 500 - elapsed;
+
+  setTimeout(() => {
+    store.commit('setGlobalLoader', false);
+  }, remaining > 0 ? remaining : 0);
+});
+
 
 export default router

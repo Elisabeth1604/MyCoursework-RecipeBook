@@ -5,20 +5,38 @@ from django.contrib.auth.password_validation import validate_password
 import os
 from django.conf import settings
 
-from .models import CustomUser
+from .models import CustomUser, Subscription
 
 class UserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'avatar', 'date_joined']
+        fields = ['id', 'username', 'email', 'avatar', 'date_joined',
+                  'followers_count', 'subscriptions_count', 'followers', 'subscriptions']
         read_only_fields = ['date_joined']
+
+    subscriptions_count = serializers.IntegerField(
+        source='subscriptions.count',
+        read_only=True
+    )
+    followers_count = serializers.IntegerField(
+        source='followers.count',
+        read_only=True
+    )
+    followers = serializers.SerializerMethodField() # Подписчики (список id)
+    subscriptions = serializers.SerializerMethodField() # Подписки (список id)
 
     def get_avatar(self, obj):
         """Возвращает путь к файлу внутри папки `media/` (без домена)"""
         if obj.avatar:
             return obj.avatar.url  # Вернет "media/avatars/user5.jpg"
         return None
+
+    def get_subscriptions(self, obj):
+        return list(obj.subscriptions.values_list('target', flat=True))
+
+    def get_followers(self, obj):
+        return list(obj.followers.values_list('subscriber', flat=True))
 
     # Обновить данные пользователя
     def update(self, instance, validated_data):
@@ -89,3 +107,15 @@ class ChangePasswordSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['new_password2']:
             raise serializers.ValidationError({"new_password": "Пароли не совпадают."})
         return attrs
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ['target']
+        read_only_fields = ['subscriber']
+
+    def validate_target(self, value):
+        if self.context['request'].user == value:
+            raise serializers.ValidationError("Нельзя подписаться на самого себя")
+        return value
+

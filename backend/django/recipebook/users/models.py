@@ -10,8 +10,8 @@ class CustomUser(AbstractUser):
         return self.username
 
 class Subscription(models.Model):
-    subscriber = models.ForeignKey(CustomUser, related_name="subscriptions", on_delete=models.CASCADE)
-    target = models.ForeignKey(CustomUser, related_name="followers", on_delete=models.CASCADE)
+    subscriber = models.ForeignKey(CustomUser, related_name="subscriptions", on_delete=models.CASCADE, db_column="subscriber")
+    target = models.ForeignKey(CustomUser, related_name="followers", on_delete=models.CASCADE, db_column="target")
 
     class Meta:
         db_table = 'subscriptions'

@@ -7,14 +7,13 @@
         <div class="avatar-wrapper" v-if="isUserLoaded">
           <!-- Основное изображение -->
           <img
-              v-if="user.avatar && !avatarError"
-              :src="`${mediaUrl}${user.avatar}`"
+              v-if="user?.avatar && !avatarError"
+              :src="`${mediaUrl}${user?.avatar}`"
               alt="Фото пользователя"
               class="avatar"
               :class="{ 'hidden': !avatarLoaded }"
               @error="handleAvatarError"
           >
-
           <!-- Дефолтное изображение (появляется, если нет аватарки или ошибка) -->
           <img
               v-else
@@ -25,13 +24,23 @@
         </div>
       </div>
       <div class="details">
-          <p><strong>Имя:</strong> {{ user.username ? user.username : 'Загрузка...' }}</p>
-          <p><strong>Email:</strong> {{ user.email ? user.email : 'Загрузка...' }}</p>
+        <p><strong>Имя:</strong> {{ user?.username ? user.username : 'Загрузка...' }}</p>
+        <p><strong>Email:</strong> {{ user?.email ? user.email : 'Загрузка...' }}</p>
         <p><strong>Дата регистрации:</strong> {{ formattedDate }}</p>
-          <app-button v-show="!isEditing"
-          @click="editProfile"
-          button-class="edit-profile"
-          >Редактировать <span class="edit">профиль</span></app-button>
+        <p><strong>Подписчики: </strong>{{ user?.followers_count }}</p>
+        <p><strong>Подписки: </strong>{{ user?.subscriptions_count }}</p>
+
+        <app-button
+            v-show="!isEditing && !isMyProfile"
+            @click="subscribeOrUnsubscribe"
+            button-class="subscribe-btn"
+        >{{ isSubscribed ? "Отписаться" : `Подписаться` }}</app-button>
+
+        <app-button
+            v-show="!isEditing && isMyProfile"
+            @click="editProfile"
+            button-class="edit-profile"
+        >Редактировать <span class="edit">профиль</span></app-button>
       </div>
       </section>
       <!-- Если флаг isEditing true, показывается форма редактирования профиля -->
@@ -139,11 +148,36 @@
         <app-message position="app-message-profile"/>
       </div>
     </div>
+    <div class="user-recipes" v-if="!isMyProfile">
+      <h2>Все рецепты пользователя</h2>
+      <div class="recipes" ref="recipeGrid" v-if="userRecipes && userRecipes.length">
+        <recipe-card
+            v-for="item in userRecipes"
+            :key="item.id"
+            :recipe-id="item.id"
+            :recipe-title="item.recipe_title"
+            :recipe-description="item.description"
+            :recipe-image="item.main_photo"
+            :prepTimeMin="item.prep_time_min"
+            :prepTimeHour="item.prep_time_hour"
+            :ingredients="item.ingredients"
+            :servings="item.servings"
+            :calories="item.calories_per_100"
+            :is-expanded="expandedCardId === item.id"
+            :is-public=true
+            @toggle-card="toggleCard(item.id)"
+        />
+      </div>
+      <!-- Если рецептов нет, например, по заданным фильтрам, выводим сообщение -->
+      <div v-else class="no-recipes" style="text-align:start">
+        <p>У пользователя пока нет рецептов.</p>
+      </div>
+    </div>
   </app-page>
 </template>
 
 <script>
-import {defineComponent, computed, ref, onMounted} from 'vue'
+import {defineComponent, computed, ref, onMounted, watch} from 'vue'
 import AppPage from '@/components/ui/AppPage.vue';
 import { useStore } from 'vuex';
 import AppRecipeCard from '@/components/AppRecipeCard.vue';
@@ -152,91 +186,203 @@ import AppInput from '@/components/AppInput.vue';
 import AppMessage from '@/components/ui/AppMessage.vue';
 import {UseProfileChangeForm} from "@/use/change-profile";
 import store from "@/store/store";
+import {useRoute} from "vue-router";
+import router from "@/router/router";
+import RecipeCard from "@/components/AppRecipeCard.vue";
 
 export default defineComponent({
   setup() {
-  const store = useStore();
+    const store = useStore();
+    const route = useRoute();
 
-  const user = computed(() => store.getters['user/user']);
+    const isAuth = computed(() => store.getters['auth/isAuthenticated']);
 
-  const isEditing = ref(false); // Флаг для формы редактирования профиля
-  const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
+    const currentUser = computed(() => store.getters['user/user']); // Текущий авторизованный пользователь
 
-  const userRecipes = computed(() => store.getters['recipe/getUserRecipes'](user.value.id));
+    const targetUserId = computed(() => route.params.userId); // ID пользователя, чей профиль открыт
+    const isCurrentUser = computed(() => currentUser.value?.id === Number(targetUserId.value)); // Совпадает ли мой id с id открытого профиля
+    const user = ref(null); // Данные пользователя, чей профиль просматривается
 
-  const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
-  const isPasswordVisible = ref(false);
+    const userRecipes = computed(() => store.getters['recipe/getUserPublicRecipes'](Number(targetUserId.value))); // Рецепты, добавленные пользователем (видим только публичные)
 
-  const isUserLoaded = ref(false);
+    const isSubscribed = computed(() => store.getters['user/isSubscriber'](Number(targetUserId.value))) // Подписаны ли мы на человека, чью страницу открыли
 
-  // Используем хук и разворачиваем его свойства
-  const profileForm = UseProfileChangeForm();
+    const isMyProfile = computed(() => {
+      return route.path === '/profile' || isCurrentUser.value || targetUserId.value === undefined; // Открыт мой профиль (true) или чужой (false)
+    });
 
-  const mediaUrl = ref('http://127.0.0.1:8000/');
+    const isPasswordVisible = ref(false);
+    const isEditing = ref(false); // Флаг для формы редактирования профиля
+    const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
 
-  onMounted(async () => {
-    await store.dispatch('user/fetchUser');
-    profileForm.username.value = user.value?.username || '';
-    profileForm.email.value = user.value?.email || '';
-    isUserLoaded.value = true;
-  });
+    const expandedCardId = ref(null);
 
-  const editProfile = () => {
-    isEditing.value = true;
-  };
+    const isUserLoaded = ref(false);
 
-  const closeEditForm = () => {
-    isEditing.value = false;
-  };
+    // Используем хук и разворачиваем его свойства (там все для редактирования профиля)
+    const profileForm = UseProfileChangeForm();
 
-  const togglePasswordVisibility = () => {
-    isPasswordVisible.value = !isPasswordVisible.value;
-  };
+    const mediaUrl = computed(() => store.getters.mediaUrl);
+    const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
 
-  const onEdit = async () => {
-    isSaving.value = true; // Показываем "Сохраняем..."
-    try {
-      await profileForm.onSubmit(); // Вызываем метод onSubmit из хука UseProfileChangeForm
-      // Закрываем форму редактирования после успешного сохранения
-      closeEditForm();
-      store.dispatch("setMessage", {
-        type: "success",
-        text: 'Данные успешно обновлены!',
-        position: "app-message-profile"
-      }, { root: true });
-    } catch (error) {
+    const loadData = async () => {
+      if (isMyProfile.value) {
+        // Если это профиль текущего пользователя
+        await store.dispatch('user/fetchUser');
+        user.value = currentUser.value;
+      } else {
+        // Если это чужой профиль - загружаем его данные
+        try {
+          const response = await store.dispatch('user/fetchUserById', targetUserId.value);
+          await store.dispatch('recipe/fetchRecipes');
+          user.value = response;
+        } catch (error) {
+          console.error('Ошибка загрузки профиля:', error);
+        }
+      }
+      isUserLoaded.value = true;
+    };
 
-      store.dispatch("setMessage", {
-        type: "error",
-        text: `Ошибка изменения профиля`,
-        position: "app-message"
-      }, { root: true });
-    } finally {
-      isSaving.value = false; // Сбрасываем состояние загрузки
-    }
-  };
+    // Загрузка при монтировании
+    onMounted(loadData);
 
-  const openRecipe = (recipeId) => {
-    // Навигация к странице рецепта
-    console.log(`Открытие рецепта с ID ${recipeId}`);
-  };
+    // Автоматическая перезагрузка при изменении URL, чтобы можно было с чужого профиля перейти на свой без полной перезагрузки страницы
+    watch(
+        () => route.path,
+        (newPath) => {
+          if (newPath === "/profile") loadData();
+        }
+    );
 
-  return {
-    user,
-    userRecipes,
-    editProfile,
-    openRecipe,
-    isEditing,
-    isSaving,
-    showMessage,
-    mediaUrl,
-    isUserLoaded,
-    onEdit,
-    isPasswordVisible,
-    togglePasswordVisibility,
-    closeEditForm,
-    ...profileForm // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику изменения пароля туда
-  };
+    const editProfile = () => {
+      isEditing.value = true;
+    };
+
+    const closeEditForm = () => {
+      isEditing.value = false;
+    };
+
+    const togglePasswordVisibility = () => {
+      isPasswordVisible.value = !isPasswordVisible.value;
+    };
+
+    const onEdit = async () => {
+      isSaving.value = true; // Показываем "Сохраняем..."
+      try {
+        await profileForm.onSubmit(); // Вызываем метод onSubmit из хука UseProfileChangeForm
+        closeEditForm();
+        store.dispatch("setMessage", {
+          type: "success",
+          text: 'Данные успешно обновлены!',
+          position: "app-message-profile"
+        }, { root: true });
+      } catch (error) {
+
+        store.dispatch("setMessage", {
+          type: "error",
+          text: `Ошибка изменения профиля`,
+          position: "app-message"
+        }, { root: true });
+      } finally {
+        isSaving.value = false;
+      }
+    };
+
+    const subscribe = async () => {
+      // Если пользователь авторизован, пробуем подписаться
+      await store.dispatch('user/fetchUser');
+      if (isAuth) {
+        try {
+          await store.dispatch('user/subscribe', targetUserId.value);
+          store.dispatch("setMessage", {
+            type: "success",
+            text: 'Вы успешно подписались!',
+            position: "app-message-profile"
+          });
+        } catch (error) {
+          store.dispatch("setMessage", {
+            type: "error",
+            text: `Ошибка подписки`,
+            position: "app-message-profile"
+          });
+        }
+      }
+      else {
+        store.commit('auth/showLoginModal');
+        store.dispatch("setMessage", {
+          type: "warning",
+          text: 'Пожалуйста, авторизуйтесь и попробуйте снова!',
+          position: "app-message"
+        });
+      }
+    };
+
+    const unsubscribe = async () => {
+      // Если пользователь авторизован, пробуем отписаться
+      if (isAuth) {
+        try {
+          await store.dispatch('user/unsubscribe', targetUserId.value);
+          store.dispatch("setMessage", {
+            type: "success",
+            text: 'Вы успешно отписались!',
+            position: "app-message-profile"
+          });
+        } catch (error) {
+          store.dispatch("setMessage", {
+            type: "error",
+            text: `Ошибка отписки`,
+            position: "app-message-profile"
+          });
+        }
+      }
+      else {
+        store.commit('auth/showLoginModal');
+        store.dispatch("setMessage", {
+          type: "warning",
+          text: 'Пожалуйста, авторизуйтесь и попробуйте снова!',
+          position: "app-message"
+        });
+      }
+    };
+
+    const subscribeOrUnsubscribe = async () => {
+      if (isSubscribed.value) {
+        await unsubscribe();
+      } else {
+        await subscribe();
+      }
+      await store.dispatch('user/fetchUser');  // Обновляем данные после действия
+      await loadData();  // Повторно загружаем профиль
+    };
+
+
+    const toggleCard = (id) => {
+      expandedCardId.value = expandedCardId.value === id ? null : id;
+    };
+
+    return {
+      user,
+      isMyProfile,
+      isCurrentUser,
+      targetUserId,
+      userRecipes,
+      editProfile,
+      subscribeOrUnsubscribe,
+      isSubscribed,
+      isEditing,
+      isSaving,
+      showMessage,
+      mediaUrl,
+      isUserLoaded,
+      onEdit,
+      isPasswordVisible,
+      togglePasswordVisibility,
+      closeEditForm,
+      ...profileForm, // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику изменения пароля туда
+
+      expandedCardId,
+      toggleCard
+    };
   },
   computed: {
     formattedDate() {
@@ -244,7 +390,7 @@ export default defineComponent({
       return new Date(this.user.date_joined).toLocaleDateString('ru-RU');
     }
   },
-  components:{AppPage, AppRecipeCard, AppButton, AppInput, AppMessage}
+  components: { RecipeCard, AppPage, AppRecipeCard, AppButton, AppInput, AppMessage }
 })
 </script>
 
@@ -347,30 +493,30 @@ export default defineComponent({
 }
 
 .app-message-profile {
-  position: absolute; /* Абсолютное позиционирование */
-  top: 0; /* Отступ сверху */
-  left: 0; /* Отступ слева */
-  width: 100%; /* Ширина контейнера */
-  padding: 15px; /* Внутренний отступ */
-  border-radius: 5px; /* Скругление углов */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */
-  display: flex; /* Флексбокс для выравнивания элементов */
-  align-items: center; /* Выравнивание по центру по вертикали */
-  justify-content: space-between; /* Равномерное распределение пространства между элементами */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
   box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
 }
 
 /* Стили для контейнера сообщения */
 .message-container {
-  position: relative; /* Относительное позиционирование */
-  margin-bottom: 40px; /* Отступ снизу */
-  background-color: white; /* Цвет фона */
-  border: 1px solid #ccc; /* Граница */
-  border-radius: 5px; /* Скругление углов */
-  padding: 20px; /* Внутренний отступ */
+  position: relative;
+  margin-bottom: 40px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
   margin-left: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */  
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 label {
@@ -410,8 +556,8 @@ label {
   }
 
   .profile-photo-container {
-    width: 250px; /* Уменьшенная ширина контейнера для фото */
-    height: 250px; /* Уменьшенная высота контейнера для фото*/
+    width: 250px;
+    height: 250px;
   }
 
   .message-container {
@@ -421,15 +567,15 @@ label {
 
 @media (max-width: 594px) {
   .profile-photo-container {
-    width: 200px; /* Уменьшенная ширина контейнера для фото */
-    height: 200px; /* Уменьшенная высота контейнера для фото*/
+    width: 200px;
+    height: 200px;
   }
 }
 
 @media (max-width: 542px) {
   .profile-photo-container {    
-    width: 150px; /* Уменьшенная ширина контейнера для фото */
-    height: 150px; /* Уменьшенная высота контейнера для фото*/
+    width: 150px;
+    height: 150px;
     
   }
 
@@ -444,8 +590,8 @@ label {
 
 @media (max-width: 480px) {
   .profile-photo-container {
-    width: 110px; /* Уменьшенная ширина контейнера для фото */
-    height: 110px; /* Уменьшенная высота контейнера для фото*/
+    width: 110px;
+    height: 110px;
   }
 
   h3{

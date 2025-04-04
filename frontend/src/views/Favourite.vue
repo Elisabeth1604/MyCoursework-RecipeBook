@@ -34,6 +34,7 @@ import store from "@/store/store";
 export default defineComponent({
   name: 'Favourite',
   setup() {
+    document.title='Сохраненные рецепты | Поделюсь рецептом';
     const store = useStore();
     const currentUser = computed(() => store.getters['user/user']);
     const expandedCardId = ref(null);

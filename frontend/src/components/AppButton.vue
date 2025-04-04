@@ -35,6 +35,7 @@ button {
   border-radius: 5px;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
@@ -45,6 +46,7 @@ button:hover {
   background-color: grey;
   cursor: not-allowed;
   opacity: 0.6; /* Уменьшение непрозрачности */
+  transition: background-color 0.2s ease, opacity 0.3s ease;
 }
 
 .disabled:hover {

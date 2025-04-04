@@ -1,15 +1,16 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
-from .models import Favourite
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, SubscriptionSerializer
+from .models import Favourite, Subscription
 from recipes.serializers import RecipeSerializer
 from recipes.models import Recipe
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
@@ -30,6 +31,13 @@ class UserProfileView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
@@ -105,14 +113,23 @@ class ChangePasswordView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FavouriteRecipeListView(APIView):
+class FavouriteRecipeListView(generics.ListAPIView):
+    serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['recipe_title', 'recipeingredient__ingredient__ingredient_name', 'category__category_name']
 
-    def get(self, request):
-        favourites = Favourite.objects.filter(user=request.user)
-        recipes = [fav.recipe for fav in favourites]
-        serializer = RecipeSerializer(recipes, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        # Получаем избранные рецепты текущего пользователя
+        favourite_recipes = Favourite.objects.filter(user=self.request.user).values_list('recipe_id', flat=True)
+
+        # Создаем базовый queryset с префетчами для оптимизации
+        queryset = Recipe.objects.filter(id__in=favourite_recipes).prefetch_related(
+            'recipeingredient_set__ingredient',
+            'category'
+        ).distinct()
+
+        return queryset
 
     def delete(self, request, recipe_id):
         try:
@@ -139,3 +156,66 @@ class FavouriteRecipeListView(APIView):
             return Response({'detail': 'Рецепт уже в избранном'}, status=200)
 
         return Response({'detail': 'Добавлен в избранное'}, status=201)
+
+
+class SubscriptionListView(generics.ListCreateAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Subscription.objects.filter(subscriber=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(subscriber=self.request.user)
+
+class SubscriptionActionsView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        target_user = get_object_or_404(User, pk=user_id)
+        if request.user == target_user:
+            return Response({'detail': 'Нельзя подписаться на самого себя'}, status=400)
+
+        # Проверим, есть ли уже подписка
+        if Subscription.objects.filter(subscriber=request.user, target=target_user).exists():
+            return Response({'detail': 'Вы уже подписаны'}, status=400)
+
+        Subscription.objects.create(subscriber=request.user, target=target_user)
+        return Response({'detail': 'Подписка оформлена'}, status=201)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            target_user = User.objects.get(pk=self.kwargs['user_id'])
+            subscription = Subscription.objects.get(
+                subscriber=request.user,
+                target=target_user
+            )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            return Response({"detail": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+        except Subscription.DoesNotExist:
+            return Response({"detail": "Подписка не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class SubscriptionStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            target_user = get_user_model().objects.get(pk=user_id)
+            is_subscribed = Subscription.objects.filter(
+                subscriber=request.user,
+                target=target_user
+            ).exists()
+
+            return Response({
+                'user_id': user_id,
+                'is_subscribed': is_subscribed
+            }, status=status.HTTP_200_OK)
+
+        except get_user_model().DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )

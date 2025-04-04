@@ -49,7 +49,7 @@
                        @delete-my-recipe="handleDelete(recipe.id)"/>
     </div>
     <div v-else>
-      <p>У вас ещё нет добавленных публичных рецептов
+      <p>У вас ещё нет добавленных личных рецептов
         <router-link to="/add-recipe" class="link"> добавьте первый</router-link>!
       </p>
     </div>

@@ -41,7 +41,11 @@ export default {
             return state.recipes.filter(recipe => recipe.user && recipe.user.id === userId);
         },
 
-        getUserFavourites: (state) => state.favourites
+        getUserPublicRecipes: (state) => (userId) => {
+            return state.recipes.filter(recipe => recipe.user && recipe.user.id === userId && recipe.is_public);
+        },
+
+        getUserFavourites: (state) => state.favourites,
 
     },
     mutations: {
@@ -81,6 +85,19 @@ export default {
             try {
                 const response = await axios.get(`${API_URL}recipes/?search=${encodeURIComponent(searchQuery)}`);
                 commit('setRecipes', response.data);
+            } catch (error) {
+                console.error("Ошибка поиска рецептов:", error);
+            }
+        },
+
+        async searchRecipesFavourites({ commit }, searchQuery) {
+            try {
+                const response = await axios.get(`${API_URL}user/favourites/?search=${encodeURIComponent(searchQuery)}`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                    }
+                });
+                commit('setFavourites', response.data );
             } catch (error) {
                 console.error("Ошибка поиска рецептов:", error);
             }

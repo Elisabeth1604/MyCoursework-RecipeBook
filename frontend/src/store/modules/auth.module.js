@@ -29,7 +29,6 @@ export function initializeAuthStore(store) {
     startTokenRefresh(store);
 }
 
-
 export default {
     namespaced: true, // Чтобы названия экшенов были локальными, а не глобальными
 
@@ -185,7 +184,7 @@ export default {
         }
     },
 
-    getters:{
+    getters: {
         token(state){
             return state.token
         },
