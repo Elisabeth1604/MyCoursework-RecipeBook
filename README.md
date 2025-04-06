@@ -1,3 +1,3 @@
-# MyCoursework-RecipeBook
+# Поделюсь рецептом
 ## Веб-приложение
 
