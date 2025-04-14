@@ -1,6 +1,6 @@
 * linguist-vendored
 *.vue linguist-vendored=false linguist-language=Vue
 *.js linguist-vendored=false linguist-language=JavaScript
-*.css linguist-vendored=false linguist-language=CS
+*.css linguist-vendored=false linguist-language=CSS
 */migrations/* linguist-vendored
 *.py linguist-vendored=false linguist-language=Python
