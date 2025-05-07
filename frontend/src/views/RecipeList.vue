@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import {ref, onMounted, computed, watch} from 'vue';
 import {useStore} from 'vuex'
 import RecipeCard from '@/components/AppRecipeCard.vue';
 import AppPage from '@/components/ui/AppPage.vue';
@@ -42,6 +42,8 @@ export default {
 
     const recipes = computed(() => store.getters['recipe/allRecipes']);
 
+    const isAuth = computed(() => store.getters['auth/isAuthenticated']);
+
     const publicRecipes = computed( () => {
       return recipes.value.filter(recipe => recipe.is_public)
     });
@@ -52,7 +54,20 @@ export default {
 
     onMounted(() => {
       store.dispatch('recipe/fetchRecipes');
+      if (isAuth.value) {
+        store.dispatch('recipe/fetchFavourites');
+      }
     });
+
+    // Следим за изменением авторизации
+    watch(isAuth, (newVal) => {
+      store.dispatch('recipe/fetchRecipes')
+      if (newVal) {
+        store.dispatch('recipe/fetchFavourites')
+      } else {
+        store.commit('recipe/setFavourites', [])
+      }
+    })
 
     return {
       expandedCardId,

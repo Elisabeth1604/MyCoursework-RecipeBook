@@ -50,8 +50,8 @@ export default {
   z-index: 1000;
 }
 .full-image {
-  max-width: 90%;
-  max-height: 90%;
+  width: 70%;
+  height: 80%;
 }
 /* Анимация для появления и исчезновения модального окна */
 .fade-enter-active, .fade-leave-active {

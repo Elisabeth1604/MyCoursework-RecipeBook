@@ -11,7 +11,10 @@ from .views import (
     SubscriptionListView,
     SubscriptionActionsView,
     UserDetailView,
-    SubscriptionStatusView
+    SubscriptionStatusView,
+    CommentListCreateView,
+    CommentDeleteView,
+    UserCommentListView
 )
 
 urlpatterns = [
@@ -27,4 +30,7 @@ urlpatterns = [
     path('subscriptions/', SubscriptionListView.as_view(), name='subscriptions-list'),
     path('subscriptions/<int:user_id>/', SubscriptionActionsView.as_view(), name='subscription-actions'),
     path('user/<int:user_id>/subscription-status/', SubscriptionStatusView.as_view(), name='subscription-status'),
+    path('recipes/<int:recipe_id>/comments/', CommentListCreateView.as_view(), name='comment-list-create'),
+    path('comments/<int:pk>/', CommentDeleteView.as_view(), name='comment-delete'),
+    path('user/<int:user_id>/comments/', UserCommentListView.as_view(), name='user-comments'),
 ]

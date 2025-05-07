@@ -1,6 +1,6 @@
 <template>
   <div class="nav-container">
-    <div :class="{ 'open': isMenuOpen }" class="nav-buttons">
+    <div class="nav-buttons">
       <app-button
       @action="handleAddRecipe"
       buttonClass="button"
@@ -9,9 +9,9 @@
       использует кастомное событие action
       для вызова методов viewCategories и viewProfile -->
       <app-button
-          @action="viewCalorieCalculator"
+          @action="handleCalorieCalculator"
           buttonClass="button"
-      >Калькулятор калорий</app-button>
+      >Калькулятор КБЖУ</app-button>
       <div class="profile-menu-container">
         <app-button v-if="isAuth"
             @action="handleProfile"
@@ -35,8 +35,31 @@
       </div>
     </div>
     <!-- Иконка гамбургер-меню -->
-    <div class="menu-icon" @click="toggleMenu">
-      <img src="../assets/icons/menu.png" alt="Menu" />
+    <div class="menu-container">
+      <div class="menu-icon">
+        <img src="../assets/icons/menu.png" alt="Menu" />
+      </div>
+      <ul class="dropdown-menu" >
+        <li><a @click="handleAddRecipe">
+          <img :src="require('@/assets/icons/add.png')" alt="Иконка добавить рецепт" class="dropdown-menu-icon">Добавить рецепт</a></li>
+        <hr>
+        <li><a @click="handleCalorieCalculator">
+          <img :src="require('@/assets/icons/calc_kkal.png')" alt="Иконка калькулятор калорий" class="dropdown-menu-icon">Калькулятор КБЖУ</a></li>
+        <hr>
+        <li v-if="isAuth"><a @click="handleProfile">
+          <img :src="require('@/assets/icons/profile.png')" alt="Иконка профиля" class="dropdown-menu-icon">Профиль</a></li>
+        <hr v-if="isAuth">
+        <li v-if="isAuth"><a @click="handleMyRecipes">
+          <img :src="require('@/assets/icons/food.png')" alt="Иконка рецептов" class="dropdown-menu-icon">Мои рецепты</a></li>
+        <hr v-if="isAuth">
+        <li v-if="isAuth"><a @click="handleFavourite">
+          <img :src="require('@/assets/icons/heart (1).png')" alt="Иконка избранного" class="dropdown-menu-icon">Избранное</a></li>
+        <hr v-if="isAuth">
+        <li v-if="isAuth"><a @click.prevent="logout">
+          <img :src="require('@/assets/icons/door.png')" alt="Иконка выйти" class="dropdown-menu-icon">Выйти</a></li>
+        <li v-if="!isAuth"><a @click.prevent="openLoginModal">
+          <img :src="require('@/assets/icons/door.png')" alt="Иконка войти" class="dropdown-menu-icon">Войти</a></li>
+      </ul>
     </div>
     <!-- Модальное окно входа, обрабатываем событие закрытия, которое эмитит LoginModal-->
     <auth-modal
@@ -60,17 +83,12 @@ export default defineComponent({
     const router = useRouter()
     const store = useStore()
 
-    const isMenuOpen = ref(false) // Флаг открытия выпадающего меню
-
     const isAuth = computed(() => store.getters['auth/isAuthenticated']);// Управление аутентификацией
 
     const isLoginVisible = computed(() => store.state.auth.isLoginVisible);// Управление показом модального окна входа
 
-    const viewCalorieCalculator = () => {
-    }
-
-    const toggleMenu = () => {
-      isMenuOpen.value = !isMenuOpen.value;
+    const handleCalorieCalculator = () => {
+      router.push('/calorie-calculator')
     }
 
     const openLoginModal = () => {
@@ -113,23 +131,22 @@ export default defineComponent({
       },
       isAuth,
       isLoginVisible,
-      isMenuOpen,
       openLoginModal,
       handleAddRecipe,
-      toggleMenu,
-      viewCalorieCalculator,
+      handleCalorieCalculator,
       handleFavourite,
       handleProfile,
       handleMyRecipes,
       handleCloseModal
     }
   },
-  components:{ AppButton, 'auth-modal':AuthModal}
+  components: { AppButton, 'auth-modal': AuthModal }
 })
 </script>
 
 <style scoped>
 .nav-container {
+  justify-self: end;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -141,7 +158,7 @@ export default defineComponent({
 }
 
 /* Контейнер для кнопки профиля и выпадающего меню */
-.profile-menu-container {
+.profile-menu-container, .menu-container {
   position: relative;
   display: inline-block;
 }
@@ -155,8 +172,7 @@ export default defineComponent({
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   z-index: 10; /*Чтобы отображалось поверх*/
   list-style: none;
-  padding-bottom: 5px;
-  padding-left: 5px;
+  padding: 5px 0 5px 5px;
   margin-top: 0;
   width: 150px; /* Ширина выпадающего меню */
   border-radius: 5px;
@@ -172,6 +188,7 @@ export default defineComponent({
 
 /* Стили для элементов выпадающего меню */
 .dropdown-menu li {
+  align-items: center;
   padding: 5px;
   text-align: left;
   font-size: 14px;
@@ -180,21 +197,22 @@ export default defineComponent({
 .dropdown-menu li a {
   text-decoration: none;
   color: #333;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
 .dropdown-menu li a:hover {
-  color:#FF9973; /*Цвет текста при наведении*/
+  color:#FF9973;
 }
 
 .dropdown-menu li a:active {
-  color:#ff5722; /*Цвет текста при нажатии*/
+  color:#ff5722;
 }
 
 .dropdown-menu-icon { /* Для изображений иконок */
-  margin-right: 10px;
   width: 18px;
   height: 18px;
 }
@@ -206,10 +224,16 @@ export default defineComponent({
   transform: translateY(0);
 }
 
+.menu-container:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 hr{
   width: 100px;
   border-color:lightgray;
-  margin: 4px 0 0 0;
+  margin: 4px 0 2px 0;
 }
 
 /* Гамбургер-меню скрыто по умолчанию */
@@ -219,30 +243,10 @@ hr{
   height: 40px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1290px) {
   .nav-buttons {
-    position: absolute;
-    top: 60px;
-    right: 10px;
-    flex-direction: column;
-    background-color: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    border-radius: 5px;
-    align-items: flex-start;
-    padding: 0;
-    margin: 0;
-    width: auto;
-    max-height: 0;
-    opacity: 0;
-    overflow: visible;
-    transform: translateY(-10px);
-    transition:
-        transform 0.2s ease-out,
-        opacity 0.3s ease-out,
-        visibility 0.2s ease-out;
+    display: none;
   }
-
   .menu-icon {
     display: block; /* Показываем иконку меню */
     height: 40px;
@@ -251,25 +255,6 @@ hr{
   .menu-icon img {
     width: 90%;  /* Иконка будет адаптироваться по ширине родительского элемента */
     height: auto; /* Поддерживаем пропорции */
-  }
-
-  /* Когда меню открыто*/
-  .nav-buttons.open {
-    flex-direction: column;
-    position: absolute;
-    top: 65px;
-    right: 1%;
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    border-radius: 5px;
-    align-items: flex-start;
-
-    max-height: 500px; /* Достаточно для всего меню */
-    opacity: 1;
-    overflow: visible;
-    transform: translateY(0);
   }
 }
 

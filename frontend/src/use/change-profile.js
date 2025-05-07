@@ -124,8 +124,11 @@ export function UseProfileChangeForm() {
             Object.keys(backendErrors.value).forEach(key => backendErrors.value[key] = ''); // Сбрасываем ошибки перед отправкой
             const formData = new FormData();
 
-            formData.append('username', values.username);
-            formData.append('email', values.email);
+            // Добавляем только заполненные поля
+            if (values.username) formData.append('username', values.username);
+            if (values.email) formData.append('email', values.email);
+            console.log("avatar value:", avatar.value)
+
             if (avatar.value) formData.append('avatar', avatar.value);
 
             // Обновляем профиль

@@ -4,8 +4,8 @@ import RecipeList from '../views/RecipeList.vue'
 
 const routes = [
   { // Доступен без авторизации (главная)
-    path: '/', // Путь URL маршрута
-    name: 'RecipeList', // Имя маршрута
+    path: '/',
+    name: 'RecipeList',
     component: RecipeList, // Какой именно компонент будет использоваться
     meta:{
       layout: 'main' // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'main'
@@ -24,54 +24,71 @@ const routes = [
   { // Доступен без авторизации (регистрация)
     path: '/reg',
     name: 'Reg',
-    component: () => import('../views/Reg.vue'), // Ленивая загрузка компонента регистрации (только когда он нужен)
+    component: () => import('../views/Reg.vue'),
     meta:{
-      layout: 'reg' // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'reg'
+      layout: 'reg'
     }
   },
   { // Доступен без авторизации (страница рецепта)
     path: '/recipe-page/:id',
     name: 'RecipePage',
-    component: () => import('../views/RecipePage.vue'), // Ленивая загрузка компонента рецепта (только когда он нужен)
+    component: () => import('../views/RecipePage.vue'),
     meta:{
-      layout: 'recipe-page' // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'recipe-page'
+      layout: 'recipe-page'
     }
   },
   { // Доступен с авторизацией (избранное)
     path: '/favourite',
     name: 'Favourite',
-    component: () => import('../views/Favourite.vue'), // Ленивая загрузка компонента избранного (только когда он нужен)
+    component: () => import('../views/Favourite.vue'),
     meta:{
-      layout: 'favourite', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'favourite'
+      layout: 'favourite',
       auth: true
     }
   },
   { // Доступен без авторизации (профиль другого пользователя)
     path: '/profile/:userId',
     name: 'Profile',
-    component: () => import('../views/Profile.vue'), // Ленивая загрузка компонента профиля (только когда он нужен)
+    component: () => import('../views/Profile.vue'),
     meta:{
-      layout: 'profile', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'profile'
+      layout: 'profile',
     }
   },
   { // Доступен с авторизацией (свой профиль)
     path: '/profile',
     name: 'MyProfile',
-    component: () => import('../views/Profile.vue'), // Ленивая загрузка компонента профиля (только когда он нужен)
+    component: () => import('../views/Profile.vue'),
     meta:{
-      layout: 'profile', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'profile'
+      layout: 'profile',
       auth: true
     }
   },
   { // Доступен с авторизацией (добавленные рецепты пользователя)
     path: '/my-recipes',
     name: 'MyRecipes',
-    component: () => import('../views/MyRecipes.vue'), // Ленивая загрузка компонента профиля (только когда он нужен)
+    component: () => import('../views/MyRecipes.vue'),
     meta:{
-      layout: 'my-recipes', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'profile'
+      layout: 'my-recipes',
       auth: true
     }
   },
+  {
+    path: '/edit-recipe/:id',
+    name: 'EditRecipe',
+    component: () => import('@/views/EditRecipe.vue'),
+    meta: {
+      layout: 'add-recipe',
+      auth: true
+    }
+  },
+  {
+    path: '/calorie-calculator',
+    name: 'CalorieCalculator',
+    component: () => import('@/views/CalorieCalculator.vue'),
+    meta: {
+      layout: 'main'
+    }
+  }
 ]
 
 const router = createRouter({
@@ -81,8 +98,9 @@ const router = createRouter({
     // Чтобы при переходе на другую страницу вернуться в начало прокрутки
     return { top: 0 };
   },
-  linkActiveClass: 'active',
-  linkExactActiveClass: 'active'
+  // CSS-классы, которые Vue Router будет добавлять к <router-link>, когда ссылка активна
+  linkActiveClass: 'active', // класс для всех подходящих путей
+  linkExactActiveClass: 'active' // класс только для точного совпадения
 })
 
 // Вызывается перед загрузкой страницы
@@ -90,7 +108,7 @@ let routeStartTime = 0;
 
 router.beforeEach((to, from, next) => {
   const requireAuth = to.meta.auth;
-  routeStartTime = Date.now(); // запоминаем старт
+  routeStartTime = Date.now(); // для отслеживания времени загрузки
 
   store.commit('setGlobalLoader', true);
 
@@ -98,7 +116,7 @@ router.beforeEach((to, from, next) => {
     store.commit('auth/showLoginModal');
     store.dispatch("setMessage", {
       type: "warning",
-      text: 'Пожалуйста, зарегистрируйтесь и попробуйте снова!',
+      text: 'Пожалуйста, войдите или зарегистрируйтесь и попробуйте снова!',
       position: "app-message"
     });
     next(false); // отменяем переход
@@ -107,14 +125,15 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+// Отключение лоадера после загрузки страницы через определенное время
+// чтобы даже если страница загрузилась моментально, не было мигания и было плавно
 router.afterEach(() => {
-  const elapsed = Date.now() - routeStartTime;
-  const remaining = 500 - elapsed;
+  const elapsed = Date.now() - routeStartTime; // сколько миллисекунд прошло с начала перехода
+  const remaining = 500 - elapsed; // сколько осталось до 500 мс
 
   setTimeout(() => {
     store.commit('setGlobalLoader', false);
   }, remaining > 0 ? remaining : 0);
 });
-
 
 export default router

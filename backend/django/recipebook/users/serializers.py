@@ -5,15 +5,22 @@ from django.contrib.auth.password_validation import validate_password
 import os
 from django.conf import settings
 
-from .models import CustomUser, Subscription
+from .models import CustomUser, Subscription, Comment
 
 class UserSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField()
+    avatar = serializers.ImageField(required=False, allow_null=True) # остаётся редактируемым полем для загрузки
+    avatar_url = serializers.SerializerMethodField() # отдаётся фронту для отображения
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'avatar', 'date_joined',
+        fields = ['id', 'username', 'email', 'avatar', 'avatar_url', 'date_joined',
                   'followers_count', 'subscriptions_count', 'followers', 'subscriptions']
         read_only_fields = ['date_joined']
+
+        extra_kwargs = {
+            'username': {'required': False},  # Делаем необязательным при обновлении
+            'email': {'required': False},
+        }
 
     subscriptions_count = serializers.IntegerField(
         source='subscriptions.count',
@@ -26,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
     followers = serializers.SerializerMethodField() # Подписчики (список id)
     subscriptions = serializers.SerializerMethodField() # Подписки (список id)
 
-    def get_avatar(self, obj):
+    def get_avatar_url(self, obj):
         """Возвращает путь к файлу внутри папки `media/` (без домена)"""
         if obj.avatar:
             return obj.avatar.url  # Вернет "media/avatars/user5.jpg"
@@ -119,3 +126,22 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Нельзя подписаться на самого себя")
         return value
 
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'text', 'created_at', 'user', 'recipe']
+        read_only_fields = ['id', 'created_at', 'user', 'recipe']
+
+class CommentWithRecipeSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    recipe = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'text', 'created_at', 'user', 'recipe']
+
+    def get_recipe(self, obj):
+        from recipes.serializers import RecipeSerializer  # ← безопасный отложенный импорт
+        return RecipeSerializer(obj.recipe, context=self.context).data

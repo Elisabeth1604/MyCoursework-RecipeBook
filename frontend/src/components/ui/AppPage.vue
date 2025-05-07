@@ -2,7 +2,7 @@
 <template>
   <div class="app-page">
     <the-filters v-if="filters"/> <!--Если передан пропс, то на странице отображаются еще фильтры (только на главной)-->
-    <h2>{{title}}</h2>
+    <h2 :class="title">{{title}}</h2>
     <slot/> <!--Сюда вставляем контент-->
   </div>
 </template>
@@ -17,7 +17,7 @@ export default defineComponent({
       type: String,
       required: true
     },
-    //Фильтры отображаем только на главной, передаем в пропс
+    // Фильтры отображаем только на главной, передаем в пропс
     filters:{
       type: Boolean,
       required: false
@@ -26,16 +26,20 @@ export default defineComponent({
   setup(props) {
     document.title=`${props.title} | Поделюсь рецептом`
   },
-  components: {
-    TheFilters,
-  }
+  components: { TheFilters }
 })
 </script>
 
 <style scoped>
-.app-page{
+.app-page {
   padding: 40px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .app-page {
+    padding: 20px;
+  }
 }
 </style>

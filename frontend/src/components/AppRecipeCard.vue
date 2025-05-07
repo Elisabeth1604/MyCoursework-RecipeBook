@@ -1,7 +1,7 @@
 <template>
   <div :class="['recipe-card', { expanded: isExpanded }]" @click="handleCardClick" title="При нажатии откроется страница рецепта">
     <button
-        v-if="mode === 'favourite' || mode === 'my'"
+        v-if="mode === 'my'"
         title = "Удалить"
         class="delete-btn"
         @click.stop="confirmDelete"
@@ -30,18 +30,21 @@
           title="Развернуть карточку"
           small>Состав</app-button>
       <button
-          v-if="mode !== 'favourite' && mode !== 'my'&& !isExpanded"
+          v-if="mode !== 'my' && !isExpanded"
           class="favorite-btn"
           @click.stop="addToFavourites(recipeId)"
-          title="Добавить рецепт в избранное">
+          :title="isFavourite ? 'Удалить из избранного' : 'Добавить в избранное'">
         <img
-           class="favourites-img"
-           :src="require('@/assets/icons/heart.png')"
-           alt="Добавить в избранное"/>
+            class="favourites-img"
+            :src="isFavourite
+                  ? require('@/assets/icons/heart.png')
+                  : require('@/assets/icons/favourite.png')"
+            :alt="isFavourite ? 'Удалить из избранного' : 'Добавить в избранное'"
+        />
       </button>
       <button
           v-if="mode === 'my'&& !isExpanded"
-          @click.stop="editRecipe(recipeId)"
+          @click.stop="editRecipe()"
           title="Редактировать рецепт"
       >Редактировать</button>
     </div>
@@ -61,7 +64,7 @@
   
 <script>
 import AppButton from './AppButton.vue';
-import store from "@/store/store";
+import {mapGetters} from "vuex";
 
 export default {
   props: {
@@ -83,9 +86,19 @@ export default {
       expandedStyle: {}, // Стили для развернутой карточки
     }
   },
-  computed:{
+  computed: {
+    ...mapGetters('recipe', ['getUserFavourites']),
     mediaUrl() {
       return this.$store.getters.mediaUrl;
+    },
+    isAuth() {
+      return this.$store.getters['auth/isAuthenticated'];
+    },
+    isFavourite() {
+      if (this.isAuth ) {
+        return this.getUserFavourites.some(recipe => recipe.id === this.recipeId);
+      }
+      return false;
     }
   },
   methods: {
@@ -100,27 +113,44 @@ export default {
       this.viewRecipe(this.recipeId);
     },
     addToFavourites(recipeId) {
-      this.$store.dispatch('recipe/addToFavourites', recipeId)
-      store.dispatch(
-          "setMessage",
-          { type: "success", text: "Рецепт добавлен в избранное!", position: "app-message" },
-          { root: true });
+      if (this.isAuth) {
+        if (this.isFavourite) {
+          // Если уже в избранном — удаляем
+          this.$store.dispatch('recipe/removeFromFavourites', recipeId);
+          this.$store.dispatch("setMessage", {
+            type: "success",
+            text: "Рецепт удалён из избранного!",
+            position: "app-message"
+          });
+        } else {
+          // Иначе добавляем
+          this.$store.dispatch('recipe/addToFavourites', recipeId);
+          this.$store.dispatch("setMessage", {
+            type: "success",
+            text: "Рецепт добавлен в избранное!",
+            position: "app-message"
+          });
+        }
+      }
+      else {
+        this.$store.dispatch("setMessage", {
+          type: "warning",
+          text: "Пожалуйста, войдите или зарегистрируйтесь и попробуйте снова!",
+          position: "app-message"
+        });
+      }
     },
     confirmDelete() {
-      const message = this.mode === 'favourite'
-          ? 'Удалить рецепт из избранного?'
-          : 'Удалить этот рецепт навсегда?';
+      const message = 'Удалить этот рецепт навсегда?';
 
       if (confirm(message)) {
-        if (this.mode === 'favourite') {
-          this.$emit('remove-from-favourite', this.recipeId);
-        } else if (this.mode === 'my') {
+        if (this.mode === 'my') {
           this.$emit('delete-my-recipe', this.recipeId);
         }
       }
     },
     editRecipe(){
-
+      this.$router.push({ name: 'EditRecipe', params: { id: this.recipeId } });
     }
   },
   components: {
@@ -130,26 +160,29 @@ export default {
 </script>
 
 <style scoped>
-/* Карточка рецепта */
 .recipe-card {
   position: relative;
   display: flex;
-  flex-direction: column; /* Важно для вертикального выравнивания */
+  flex-direction: column;
   background-color: white;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   cursor: pointer;
-  min-height: 420px; /* Устанавливаем минимальную высоту */
-  overflow: hidden; /*Скрывает часть содержимого, которая не поместилась в контейнере*/
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавное изменение тени и размера*/
+  min-height: 420px;
+  overflow: hidden; /* Скрывает часть содержимого, которая не поместилась в контейнере */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавное изменение тени и размера */
 }
 
 /* Развернутая карточка рецепта */
 .recipe-card.expanded {
   transform: scale(1.05); /* Увеличиваем карточку */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Главное фото рецепта */
@@ -243,9 +276,9 @@ ul{
   font-size: 14px;
   color: #666;
   overflow: hidden;
-  text-overflow: ellipsis; /* Добавляем многоточие в конце при обрезке */
-  display: -webkit-box; /* Используем для поддержки обрезки по количеству строк */
-  -webkit-box-orient: vertical; /* Указываем вертикальную ориентацию для box */
+  text-overflow: ellipsis; /* Многоточие в конце при обрезке */
+  display: -webkit-box; /* Поддержка обрезки по количеству строк */
+  -webkit-box-orient: vertical; /* Вертикальная ориентация для box */
   -webkit-line-clamp: 3; /* Ограничиваем количество строк */
 }
 
@@ -266,6 +299,4 @@ ul{
 .delete-btn:hover{
   background-color: #ff5722;
 }
-
-
 </style>

@@ -9,9 +9,6 @@ import TheHeader from '@/components/TheHeader.vue';
 import TheFooter from '@/components/TheFooter.vue';
 
 export default{
-  setup() {
-
-  },
-  components:{TheHeader, TheFooter}
+  components: { TheHeader, TheFooter }
 }
 </script>

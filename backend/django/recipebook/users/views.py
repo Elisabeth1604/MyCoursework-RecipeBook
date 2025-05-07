@@ -1,11 +1,12 @@
 from rest_framework.generics import get_object_or_404
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, SubscriptionSerializer
-from .models import Favourite, Subscription
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer, SubscriptionSerializer, CommentSerializer, CommentWithRecipeSerializer
+from .models import Favourite, Subscription, Comment
 from recipes.serializers import RecipeSerializer
 from recipes.models import Recipe
 from rest_framework import status
@@ -13,18 +14,23 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.http import JsonResponse
 
 from django.conf import settings
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Только для авторизованных пользователей
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         serializer = UserSerializer(request.user)  # Сериализуем данные пользователя
         return Response(serializer.data)
 
     def put(self, request):
+        print("DEBUG: request.data =", request.data)
+        print("DEBUG: request.FILES =", request.FILES)
+        print("DEBUG: avatar in FILES:", 'avatar' in request.FILES)
         serializer = UserSerializer(request.user, data=request.data, partial=True)  # Позволяет обновлять частично
         if serializer.is_valid():
             serializer.save()
@@ -219,3 +225,38 @@ class SubscriptionStatusView(APIView):
                 {'error': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class CommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        recipe_id = self.kwargs.get('recipe_id')
+        return Comment.objects.filter(recipe_id=recipe_id).order_by('created_at')
+
+    def perform_create(self, serializer):
+        recipe_id = self.kwargs.get('recipe_id')
+        serializer.save(user=self.request.user, recipe_id=recipe_id)
+
+
+class CommentDeleteView(generics.DestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        comment = self.get_object()
+        if comment.user != request.user:
+            return Response({'detail': 'Нельзя удалить чужой комментарий'}, status=status.HTTP_403_FORBIDDEN)
+        return super().delete(request, *args, **kwargs)
+
+class UserCommentListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        if request.user.id != int(user_id):
+            return Response({"detail": "Нельзя просматривать чужие комментарии"}, status=403)
+
+        comments = Comment.objects.filter(user_id=user_id).select_related('recipe').order_by('-created_at')
+        serializer = CommentWithRecipeSerializer(comments, many=True)
+        return Response(serializer.data)

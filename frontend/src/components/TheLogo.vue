@@ -14,7 +14,7 @@
 }
 
 a {
-  text-decoration: none; /* Отключаем подчеркивание для всех ссылок */
+  text-decoration: none; /* Отключаем подчеркивание для ссылок */
   color: inherit; /* Цвет текста ссылок остается неизменным */
 }
 
@@ -23,37 +23,32 @@ a {
   margin-right: 10px;
 }
 
-.logo h1 {
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 650;
-  margin: 0;
-  font-size: 40px
-}
-
 /* Адаптивное поведение для логотипа и текста */
 @media (max-width: 768px) {
   .logo img {
     height: 40px; /* Уменьшение размера логотипа */
     margin-right: 0; /* Убрать отступ при уменьшении экрана */
   }
-
-  .logo h1 {
-    font-size: 30px; /* Уменьшение шрифта заголовка */
-  }
 }
 
 /* Более узкие экраны (мобильные) */
 @media (max-width: 480px) {
-  .logo h1 {
-    font-size: 24px; /* Ещё большее уменьшение шрифта заголовка */
-  }
-
   .logo img {
     height: 35px; /* Уменьшение логотипа для мобильных */
   }
 
   header {
     padding: 15px; /* Уменьшение отступов для мобильных */
+  }
+}
+
+@media (max-width: 382px) {
+  .logo img {
+    height: 30px;
+  }
+
+  header {
+    padding: 10px;
   }
 }
 </style>

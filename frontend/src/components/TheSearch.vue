@@ -1,5 +1,5 @@
 <template>
-  <div class ="search-form" v-if="route.path !== '/add-recipe'">
+  <div class ="search-form" :class="{ hidden: !showSearch() }">
     <input class ="search-form_txt"
            id="search-form_txt"
            type="text"
@@ -39,10 +39,16 @@ export default defineComponent({
         store.dispatch('recipe/fetchRecipes')
       }
     };
+
+    const showSearch = () => {
+      return route.path !== '/add-recipe' && !route.path.startsWith('/profile') && route.path !== '/calorie-calculator';
+    };
+
     return {
       searchQuery,
       search,
-      route
+      route,
+      showSearch
     };
   },
   components:{ AppButton }
@@ -67,14 +73,17 @@ export default defineComponent({
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Уменьшаем размеры поиска при уменьшении экрана */
+.hidden {
+  visibility: hidden;
+}
+
 @media (max-width: 1030px) {
   .search-form input {
     width: 250px;
   }
 }
 
-@media (max-width: 618px) {
+@media (max-width: 730px) {
   .search-form {
     height: 30px;
     margin-right: 10px;
@@ -97,12 +106,10 @@ export default defineComponent({
     width: 100px;
     font-size: 12px;    
   }
-
   .search-form{
     margin-right: 10px;
     margin-left: 10px;
   }
-
   .search-button{
     font-size: 12px;
   }

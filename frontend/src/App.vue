@@ -1,7 +1,4 @@
 <template>
-  <!-- <main-layout></main-layout> страница с рецептами (главная)
-       <auth-layout></auth-layout>
-       <reg-layout></reg-layout> -->
   <div v-cloak> <!--Элементы становятся видимыми только когда страница полностью отрендерится-->
     <app-loader/>
     <component :is="layout+'-layout'" v-if="layout"></component> <!--Конкатенируем сам layout из meta с оставшейся строкой и получаем название, динамический компонент-->
@@ -9,10 +6,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-// Получить метаданные текущего роута с помощью UseRoute()
 import { useRoute } from 'vue-router'
-import { useStore} from 'vuex'
 import { computed } from 'vue'
 import MainLayout from './layout/MainLayout.vue';
 import AuthLayout from './layout/AuthLayout.vue';
@@ -26,11 +20,11 @@ import AppLoader from "@/components/ui/AppLoader.vue";
 
 export default{
   setup() {
-    const route = useRoute() // Текущий роут
+    const route = useRoute() // Текущий роут, получить его метаданные
     const layout = computed(() => route.meta.layout)
     
     return{
-      layout//Возвращаем значение layout из meta для доступа в шаблоне
+      layout //Возвращаем значение layout из meta для доступа в шаблоне
     }    
   },
 

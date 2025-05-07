@@ -1,7 +1,7 @@
 <template>
   <div v-if="isLoginVisible" class="modal-overlay" @click="closeModal"> <!-- Полупрозрачный затемнённый фон -->
     <div class="modal-window" @click.stop> <!-- Само модальное окно, клик на нем не закрывает модальное окно -->
-    <h2>Вход</h2>
+      <h2>Вход</h2>
       <form @submit.prevent="onSubmit"> <!--Отправка формы входа с предотвращением стандартной перезагрузки страницы-->
         <app-input
             label="Имя пользователя"
@@ -37,24 +37,14 @@
              :title="isPasswordVisible ? 'Скрыть пароль' : 'Показать пароль'"></a>
         </div>
         <div class="form-footer">
-          <div class="check-box-memory">
-                <input type="checkbox" id="memoryMe" name="memoryMe" value="to-memory" />
-                <label for="memoryMe">Запомнить меня?</label>
-          </div>
+          <router-link to="/reg"
+                       @click="closeModal"
+                       class="link-not-registered"
+          >Еще не зарегистрированы?</router-link>
           <app-button type="submit"
               :disabled="isSubmitting"
             >Войти</app-button>
         </div>
-
-        <app-link
-        text="Забыли пароль?"
-        @click="closeModal"
-        link-class="link-forgot-pass"></app-link>
-
-        <router-link to="/reg"
-        @click="closeModal"
-        class="link-not-registered"
-        >Еще не зарегистрированы?</router-link>
       </form>
     </div>
   </div>
@@ -84,7 +74,7 @@ export default defineComponent({
     const message = computed(() => store.getters.message);
     const showMessage = computed(() => store.getters.showMessage);
 
-    const isPasswordVisible= ref(false) // Состояние видимости пароля
+    const isPasswordVisible= ref(false)
 
     const closeModal = () => {
       emit('close');
@@ -110,30 +100,6 @@ export default defineComponent({
 </script>
 
 <style>
-/* Полупрозрачный затемненный фон */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-/* Стиль модального окна */
-.modal-window {
-  width: 400px;
-  max-width: 90%; /* Для адаптивности */
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
 .login-form{
   display: flex;
   align-items: center;
@@ -186,6 +152,7 @@ export default defineComponent({
 	background: url(/src/assets/icons/view.png) center no-repeat; /* Центрировать  и не повторять*/
   cursor: pointer;
 }
+
 .password-control.view {
 	background: url(/src/assets/icons/no-view.png) center no-repeat;
 }

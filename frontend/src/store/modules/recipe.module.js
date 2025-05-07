@@ -1,4 +1,5 @@
 import axios from "axios";
+import favourite from "@/views/Favourite.vue";
 
 const TOKEN_KEY = 'jwt-token'
 const API_URL = 'http://localhost/api/'
@@ -6,9 +7,12 @@ const API_URL = 'http://localhost/api/'
 export default {
     namespaced: true,
     state: {
-        recipes:[], // Здесь хранятся рецепты, которые пришли с бэка, все либо же с какими-то фильтрами, удобно обращаться сюда из компонента
-        servings: 4, // Это текущее количество порций, по дефолту 4, но заменяется на указанное автором рецепта, пользователь меняет через UI и пересчитывает ингредиенты
-        favourites: {}, // Здесь хранится избранное
+        // Здесь хранятся рецепты, которые пришли с бэка, все либо же с какими-то фильтрами, удобно обращаться сюда из компонента
+        recipes: [],
+        // Это текущее количество порций, по дефолту 4, но заменяется на указанное автором рецепта, пользователь меняет через UI и пересчитывает ингредиенты
+        servings: 4,
+        // Здесь хранится избранное
+        favourites: []
     },
     getters: {
         // Возвращает все рецепты
@@ -23,7 +27,6 @@ export default {
             if (!state.recipe || !Array.isArray(state.recipe.ingredients)) {
               return [];
             }
-          
             return state.recipe.ingredients.map((ingredient) => ({
               name: ingredient.ingredient.ingredient_name,
               amount: ((ingredient.quantity / state.recipe.servings) * state.servings).toFixed(1),
@@ -32,7 +35,6 @@ export default {
         },
 
         getRecipeById: (state) => (id) => {
-            console.log(id)
             return state.recipes.find(recipe => Number(recipe.id) === id)|| null;
         },
 
@@ -46,7 +48,6 @@ export default {
         },
 
         getUserFavourites: (state) => state.favourites,
-
     },
     mutations: {
         setRecipe(state, recipe) {
@@ -120,6 +121,22 @@ export default {
             }
         },
 
+        async updateRecipe({ commit }, { recipeId, recipeData }) {
+            try {
+                const response = await axios.put(`${API_URL}recipes/${recipeId}/`, recipeData, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                return response.data;
+            } catch (error) {
+                console.error("Ошибка обновления рецепта:", error);
+                throw error;
+            }
+        },
+
         async fetchFavourites({ commit, rootState }) {
             try {
                 const response = await axios.get(`${API_URL}user/favourites`, {
@@ -163,6 +180,46 @@ export default {
             }
         },
 
+        async getRecipeComments(context, recipeId){
+            try {
+                const response = await axios.get(`${API_URL}recipes/${recipeId}/comments/`);
+                return response.data; // возвращаем список комментариев
+            }
+            catch (error) {
+                console.error("Ошибка при получении комментариев к рецепту:", error);
+                return []; // возвращаем пустой массив на случай ошибки
+            }
+        },
+
+        async addRecipeComment ({}, { recipeId, newComment }){
+            try {
+                await axios.post(`http://localhost/api/recipes/${recipeId}/comments/`, {
+                    text: newComment
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('jwt-token')}`
+                    }
+                });
+                }
+                catch (error) {
+                    console.error('Ошибка при добавлении комментария:', error);
+                    throw error;
+                }
+        },
+
+        async deleteRecipeComment ({}, commentId){
+            try {
+                await axios.delete(`http://localhost/api/comments/${commentId}/`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('jwt-token')}`
+                    }
+                });
+            }
+            catch (error) {
+                console.error('Ошибка при удалении комментария:', error);
+                throw error;
+            }
+        },
 
         // Устанавливаем текущий рецепт
         setRecipe({ commit }, recipe) {

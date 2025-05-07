@@ -37,6 +37,12 @@ class RecipeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return RecipeCreateSerializer
+        return RecipeSerializer
+
+
 class IngredientListView(generics.ListAPIView):
     serializer_class = IngredientSerializer
     def get_queryset(self):

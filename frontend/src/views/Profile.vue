@@ -7,11 +7,10 @@
         <div class="avatar-wrapper" v-if="isUserLoaded">
           <!-- Основное изображение -->
           <img
-              v-if="user?.avatar && !avatarError"
-              :src="`${mediaUrl}${user?.avatar}`"
+              v-if="user?.avatar_url && !avatarError"
+              :src="`${mediaUrl}${user?.avatar_url}`"
               alt="Фото пользователя"
               class="avatar"
-              :class="{ 'hidden': !avatarLoaded }"
               @error="handleAvatarError"
           >
           <!-- Дефолтное изображение (появляется, если нет аватарки или ошибка) -->
@@ -33,7 +32,6 @@
         <app-button
             v-show="!isEditing && !isMyProfile"
             @click="subscribeOrUnsubscribe"
-            button-class="subscribe-btn"
         >{{ isSubscribed ? "Отписаться" : `Подписаться` }}</app-button>
 
         <app-button
@@ -81,6 +79,7 @@
             name="image"
             iD="image"
             type="file"
+            ref="avatarInput"
             input-class="add-recipe-form"
             @change="handleAvatarChange"
           ></app-input>
@@ -140,13 +139,23 @@
             button-class="edit-profile"
             :disabled="isSubmitting"
             >Сохранить изменения</app-button>
-            <small v-show="isSaving">Сохраняем...</small>
         </form>
       </section>
       <!-- Если флаг showMessage из store в значении true, показываем уведомление  -->
       <div class="message-container" v-if="showMessage">
         <app-message position="app-message-profile"/>
       </div>
+      <the-profile-followers :followers-section="true" v-if="isMyProfile"/>
+      <the-profile-followers :subscriptions-section="true" v-if="isMyProfile"/>
+      <section class="my-comments" v-if="isMyProfile && myComments.length">
+        <h2>Мои комментарии</h2>
+        <app-my-comment
+            v-for="comment in myComments"
+            :key="comment.id"
+            :comment="comment"
+            @delete="deleteComment(comment.id)">
+        </app-my-comment>
+      </section>
     </div>
     <div class="user-recipes" v-if="!isMyProfile">
       <h2>Все рецепты пользователя</h2>
@@ -168,6 +177,7 @@
             @toggle-card="toggleCard(item.id)"
         />
       </div>
+
       <!-- Если рецептов нет, например, по заданным фильтрам, выводим сообщение -->
       <div v-else class="no-recipes" style="text-align:start">
         <p>У пользователя пока нет рецептов.</p>
@@ -189,6 +199,8 @@ import store from "@/store/store";
 import {useRoute} from "vue-router";
 import router from "@/router/router";
 import RecipeCard from "@/components/AppRecipeCard.vue";
+import TheProfileFollowers from "@/components/TheProfileFollowers.vue";
+import AppMyComment from "@/components/AppMyComment.vue";
 
 export default defineComponent({
   setup() {
@@ -213,7 +225,7 @@ export default defineComponent({
 
     const isPasswordVisible = ref(false);
     const isEditing = ref(false); // Флаг для формы редактирования профиля
-    const isSaving = ref(false); //Если нажали сохранить изменения, изменяется на true для надписи сохраняем...
+    const avatarInput = ref(null); // доступ к <app-input type="file" ref="avatarInput">
 
     const expandedCardId = ref(null);
 
@@ -225,11 +237,21 @@ export default defineComponent({
     const mediaUrl = computed(() => store.getters.mediaUrl);
     const showMessage = computed(() => store.getters.showMessage); // Флаг для уведомления
 
+    const myComments = ref([]);
+
+    const loadMyComments = async () => {
+      if (isMyProfile.value && currentUser.value?.id) {
+        myComments.value = await store.dispatch('user/fetchUserComments', currentUser.value.id);
+        console.log(myComments.value.length)
+      }
+    };
+
     const loadData = async () => {
       if (isMyProfile.value) {
         // Если это профиль текущего пользователя
         await store.dispatch('user/fetchUser');
         user.value = currentUser.value;
+        await loadMyComments();
       } else {
         // Если это чужой профиль - загружаем его данные
         try {
@@ -241,6 +263,7 @@ export default defineComponent({
         }
       }
       isUserLoaded.value = true;
+      document.title=`${user.value.username} | Поделюсь рецептом`;
     };
 
     // Загрузка при монтировании
@@ -248,11 +271,12 @@ export default defineComponent({
 
     // Автоматическая перезагрузка при изменении URL, чтобы можно было с чужого профиля перейти на свой без полной перезагрузки страницы
     watch(
-        () => route.path,
-        (newPath) => {
-          if (newPath === "/profile") loadData();
+        () => route.fullPath, // отслеживаем весь путь, включая и /profile, и /profile/123
+        () => {
+          loadData(); // каждый раз при изменении маршрута загружаем заново
         }
     );
+
 
     const editProfile = () => {
       isEditing.value = true;
@@ -267,9 +291,32 @@ export default defineComponent({
     };
 
     const onEdit = async () => {
-      isSaving.value = true; // Показываем "Сохраняем..."
       try {
         await profileForm.onSubmit(); // Вызываем метод onSubmit из хука UseProfileChangeForm
+        if (isMyProfile.value) {
+          user.value = { ...store.getters['user/user'] }
+        }
+
+        // Сброс всех данных формы
+        profileForm.username.value = '';
+        profileForm.email.value = '';
+        profileForm.oldPassword.value = null;
+        profileForm.newPassword.value = null;
+        profileForm.confirmPassword.value = null;
+        profileForm.avatar.value = null;
+        profileForm.previewAvatar.value = null;
+
+        // Сброс ошибок
+        Object.keys(profileForm.backendErrors.value).forEach(
+            (key) => (profileForm.backendErrors.value[key] = '')
+        );
+
+        // Сброс <input type="file">
+        if (avatarInput.value) {
+          const fileInput = avatarInput.value.$el?.querySelector('input[type="file"]');
+          if (fileInput) fileInput.value = null;
+        }
+
         closeEditForm();
         store.dispatch("setMessage", {
           type: "success",
@@ -277,21 +324,18 @@ export default defineComponent({
           position: "app-message-profile"
         }, { root: true });
       } catch (error) {
-
         store.dispatch("setMessage", {
           type: "error",
           text: `Ошибка изменения профиля`,
           position: "app-message"
         }, { root: true });
-      } finally {
-        isSaving.value = false;
       }
     };
 
     const subscribe = async () => {
       // Если пользователь авторизован, пробуем подписаться
       await store.dispatch('user/fetchUser');
-      if (isAuth) {
+      if (isAuth.value) {
         try {
           await store.dispatch('user/subscribe', targetUserId.value);
           store.dispatch("setMessage", {
@@ -319,7 +363,7 @@ export default defineComponent({
 
     const unsubscribe = async () => {
       // Если пользователь авторизован, пробуем отписаться
-      if (isAuth) {
+      if (isAuth.value) {
         try {
           await store.dispatch('user/unsubscribe', targetUserId.value);
           store.dispatch("setMessage", {
@@ -360,9 +404,31 @@ export default defineComponent({
       expandedCardId.value = expandedCardId.value === id ? null : id;
     };
 
+    const deleteComment = async (commentId) => {
+      try {
+        await store.dispatch('recipe/deleteRecipeComment', commentId);
+
+        myComments.value = myComments.value.filter(c => c.id !== commentId);
+
+        store.dispatch('setMessage', {
+          type: 'success',
+          text: 'Комментарий удалён',
+          position: 'app-message-profile'
+        });
+      } catch (error) {
+        store.dispatch('setMessage', {
+          type: 'error',
+          text: `Ошибка удаления: ${error.response?.data?.detail || error.message}`,
+          position: 'app-message-profile'
+        });
+      }
+    };
+
     return {
       user,
       isMyProfile,
+      myComments,
+      deleteComment,
       isCurrentUser,
       targetUserId,
       userRecipes,
@@ -370,7 +436,7 @@ export default defineComponent({
       subscribeOrUnsubscribe,
       isSubscribed,
       isEditing,
-      isSaving,
+      avatarInput,
       showMessage,
       mediaUrl,
       isUserLoaded,
@@ -381,7 +447,9 @@ export default defineComponent({
       ...profileForm, // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику изменения пароля туда
 
       expandedCardId,
-      toggleCard
+      toggleCard,
+
+      TheProfileFollowers
     };
   },
   computed: {
@@ -390,7 +458,7 @@ export default defineComponent({
       return new Date(this.user.date_joined).toLocaleDateString('ru-RU');
     }
   },
-  components: { RecipeCard, AppPage, AppRecipeCard, AppButton, AppInput, AppMessage }
+  components: {AppMyComment, TheProfileFollowers, RecipeCard, AppPage, AppRecipeCard, AppButton, AppInput, AppMessage }
 })
 </script>
 
@@ -460,10 +528,6 @@ export default defineComponent({
   align-items: center;
 }
 
-.hidden {
-  opacity: 0;
-}
-
 .avatar {
   width: 100%;
   height: 100%;
@@ -492,31 +556,12 @@ export default defineComponent({
   margin-left:20px;
 }
 
-.app-message-profile {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
-  box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
-}
-
 /* Стили для контейнера сообщения */
 .message-container {
   position: relative;
   margin-bottom: 40px;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 20px;
-  margin-left: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: transparent;
+  padding: 10px;
 }
 
 label {
@@ -539,6 +584,14 @@ label {
 
 .close-btn:hover {
   color: #333;
+}
+
+.is-saving {
+  color: #155724;
+}
+
+.my-comments {
+  grid-column: 1 / 2;
 }
 
 @media (max-width: 1050px) {

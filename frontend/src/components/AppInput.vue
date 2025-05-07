@@ -1,5 +1,6 @@
 <template>
-  <div :class="[name==='ingredient' || name==='quantity' ? 'form-group-ingredients' : 'form-group']"> <!--Добавила динамический класс, чтобы у полей ввода ингредиента и его количества был класс не form-group-->
+  <div :class="[name==='ingredient' || name==='quantity' ? 'form-group-ingredients' :
+                name==='include-ingredients' || name==='exclude-ingredients' || name==='calories'? '' : 'form-group']"> <!--Добавила динамический класс, чтобы у полей ввода ингредиента и его количества был класс не form-group-->
     <label v-if="label !== '' && iD !== 'uname' && iD !== 'password'" :for="iD">{{label}}</label> <!-- Привязываем метку (label) к полю ввода по атрибуту 'for' с динамическим значением iD -->
     <!-- Если передан инпут для названия рецепта или для mail, делаем его активным автоматически с помощью кастомной
      директивы v-focus -->
@@ -24,7 +25,7 @@
     @blur="handleBlur">
 
      <!-- Сообщение об ошибке, если оно передано -->
-     <small v-if="error">{{ error }}</small>
+     <small class="validation-message" v-if="error">{{ error }}</small>
   </div>
 </template>
 
@@ -42,7 +43,7 @@ export default {
       type:String,
       default:''
     },
-    modelValue: String,
+    modelValue: [String, Number, null],
     inputClass:{
       type: String,
       default:''
@@ -80,11 +81,30 @@ export default {
   border-radius: 5px;
 }
 
-small {
+.validation-message {
   color: darkred;
   font-size: 0.8rem;
   display: block;
   margin-top: 5px; /* Пробел между полем и ошибкой */
   margin-bottom: 10px;
+}
+
+.class-input{
+  box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.filter-input {
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

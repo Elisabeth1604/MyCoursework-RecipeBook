@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from rest_framework import serializers
 from users.serializers import UserSerializer  # Импортируем сериализатор пользователя
 from rest_framework.validators import UniqueValidator
@@ -37,17 +39,35 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
-        read_only_fields = ('calories_per_100',)
+        read_only_fields = ('calories_per_100', 'proteins_per_100', 'fats_per_100', 'carbs_per_100')
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     # Здесь предполагаем, что при создании мы передаём идентификаторы ингредиента и единицы измерения
     ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
+    quantity = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = RecipeIngredient
         fields = ['ingredient', 'quantity', 'unit']
+
+    def to_internal_value(self, data):
+        """Обработка пустых строк до валидации полей"""
+        # Преобразуем '' в None для quantity
+        if data.get('quantity') == '':
+            data['quantity'] = None
+        return super().to_internal_value(data)
+
+    def validate(self, data):
+        unit = data.get('unit')
+        quantity = data.get('quantity')
+
+        if unit and unit.unit_name.strip().lower() != 'по вкусу' and quantity is None:
+            raise serializers.ValidationError({
+                'quantity': 'Укажите количество, если это не "по вкусу".'
+            })
+        return data
 
 class StepCreateSerializer(serializers.ModelSerializer):
     photo = serializers.CharField(allow_blank=True, required=False)
@@ -102,6 +122,68 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             RecipeStep.objects.create(recipe=recipe, **step_data)
 
         return recipe
+
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop('recipeingredient_set', [])
+        steps_data = validated_data.pop('steps', [])
+
+        # Обновляем простые поля рецепта
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # --- Обработка шагов --- #
+        existing_steps = list(instance.steps.all())
+        new_steps = steps_data
+
+        # Обновляем существующие шаги
+        for i, step_data in enumerate(new_steps):
+            if i < len(existing_steps):
+                step = existing_steps[i]
+                # Если фото изменилось – удаляем старое
+                if 'photo' in step_data and step.photo != step_data['photo']:
+                    if step.photo:
+                        relative_path = step.photo.replace(settings.MEDIA_URL, '') if step.photo.startswith(
+                            settings.MEDIA_URL) else step.photo
+                        full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                        if os.path.isfile(full_path):
+                            try:
+                                os.remove(full_path)
+                            except Exception as e:
+                                print(f"Ошибка при удалении фото шага: {e}")
+                    step.photo = step_data.get('photo', '')
+                step.description = step_data.get('description', '')
+                step.save()
+            else:
+                # Добавляем новый шаг
+                RecipeStep.objects.create(recipe=instance, **step_data)
+
+        # Удаляем лишние старые шаги
+        if len(existing_steps) > len(new_steps):
+            for step in existing_steps[len(new_steps):]:
+                if step.photo:
+                    relative_path = step.photo.replace(settings.MEDIA_URL, '') if step.photo.startswith(
+                        settings.MEDIA_URL) else step.photo
+                    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                    if os.path.isfile(full_path):
+                        try:
+                            os.remove(full_path)
+                        except Exception as e:
+                            print(f"Ошибка при удалении фото шага: {e}")
+                step.delete()
+
+        instance.recipeingredient_set.all().delete()
+
+        # Создаём новые ингредиенты
+        for ingredient_data in ingredients_data:
+            RecipeIngredient.objects.create(
+                recipe=instance,
+                ingredient=ingredient_data['ingredient'],
+                quantity=ingredient_data['quantity'],
+                unit=ingredient_data.get('unit')
+            )
+
+        return instance
 
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:

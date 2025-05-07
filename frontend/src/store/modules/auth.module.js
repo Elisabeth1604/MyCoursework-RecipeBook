@@ -11,7 +11,6 @@ import router from "@/router/router";
 function startTokenRefresh(store) {
     setInterval(async () => {
         const token = store.state.auth.token;
-        console.log(token);
         if (token) {
             const decoded = jwtDecode(token);
             const now = Math.floor(Date.now() / 1000);
@@ -96,7 +95,6 @@ export default {
             } catch (error) {
                 console.error("Ошибка обновления токена:", error);
                 commit("logout");
-                router.push("/login"); // Перенаправляем на вход
             }
         },
 

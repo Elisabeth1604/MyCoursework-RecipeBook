@@ -14,6 +14,9 @@ const show = computed(() => store.getters.showGlobalLoader)
 
 <style scoped>
 .global-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: fixed;
   top: 0;
   left: 0;
@@ -21,11 +24,7 @@ const show = computed(() => store.getters.showGlobalLoader)
   height: 100vh;
   background: white;
   z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
-
 .spinner {
   width: 50px;
   height: 50px;
@@ -34,7 +33,6 @@ const show = computed(() => store.getters.showGlobalLoader)
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);

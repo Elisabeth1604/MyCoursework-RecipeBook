@@ -3,7 +3,10 @@
    через слот и стили через пропсы -->
   <button @click="$emit('action')"
           :class="[buttonClass, { 'disabled': Disabled }]"
-          :disabled="Disabled"><slot/></button>
+          :disabled="Disabled">
+          <slot name="icon" />
+          <slot/>
+  </button>
 </template>
 
 <script>
@@ -29,7 +32,7 @@ button {
   display: inline-block;
   padding: 10px 15px;
   max-height: 40px;
-  background-color: #FF9973;
+  background-color: #FF9670;
   color: white;
   border: none;
   border-radius: 5px;
@@ -45,7 +48,7 @@ button:hover {
 .disabled {
   background-color: grey;
   cursor: not-allowed;
-  opacity: 0.6; /* Уменьшение непрозрачности */
+  opacity: 0.6;
   transition: background-color 0.2s ease, opacity 0.3s ease;
 }
 
@@ -53,5 +56,11 @@ button:hover {
   background-color: rgb(100, 99, 99);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+  button {
+    font-size: 12px;
+  }
 }
 </style>

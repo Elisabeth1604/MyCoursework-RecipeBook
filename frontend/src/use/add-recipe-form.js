@@ -1,6 +1,6 @@
 import { useField, useForm } from "vee-validate";
 import * as yup from "yup";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 export function useAddRecipeForm() {
     // Объект для ошибок, возвращаемых бэкендом, например, если recipe_title не уникален
@@ -13,6 +13,7 @@ export function useAddRecipeForm() {
             .trim()
             .required('Название рецепта обязательно.'),
 
+
         description: yup.string()
             .trim()
             .required('Описание обязательно.'),
@@ -23,7 +24,8 @@ export function useAddRecipeForm() {
             .required('Введите количество порций.'),
 
         category: yup.string()
-            .required('Выберите категорию.'),
+            .required('Выберите категорию.')
+            .notOneOf([''], 'Категория обязательна.'),
 
         ingredients: yup
             .array()
@@ -58,51 +60,71 @@ export function useAddRecipeForm() {
     });
 
     // Инициализируем форму с данной схемой
-    const { handleSubmit, isSubmitting, resetForm} = useForm({ validationSchema: schema } );
+    const { handleSubmit, isSubmitting, resetForm} = useForm({
+        validationSchema: schema,
+    } );
 
     // Поля формы
     const {
         value: recipe_title,
         errorMessage: rtError,
         handleBlur: rtBlur,
-    } = useField('recipe_title');
+        meta: rtMeta,
+    } = useField('recipe_title', undefined);
+
+    const rtDisplayError = computed(() => rtMeta.touched ? rtError.value : '');
 
     const {
         value: description,
         errorMessage: descError,
         handleBlur: descBlur,
-    } = useField('description');
+        meta: descMeta
+    } = useField('description', undefined);
+
+    const descDisplayError = computed(() => descMeta.touched ? descError.value : '');
 
     const {
         value: servings,
         errorMessage: servError,
         handleBlur: servBlur,
-    } = useField('servings');
+        meta: servMeta
+    } = useField('servings',undefined, {
+        initialValue: null,
+    });
+
+    const servDisplayError = computed(() => servMeta.touched ? servError.value : '');
 
     const {
         value: category,
         errorMessage: catError,
         handleBlur: catBlur,
+        meta: catMeta
     } = useField('category', undefined, {
         initialValue: ""
     });
+
+    const catDisplayError = computed(() => catMeta.touched ? catError.value : '');
 
     return {
         recipe_title,
         rtError,
         rtBlur,
+        rtDisplayError,
 
         description,
         descError,
         descBlur,
+        descDisplayError,
 
         servings,
         servError,
         servBlur,
+        servDisplayError,
 
         category,
         catError,
         catBlur,
+        catDisplayError,
 
         isSubmitting,
         handleSubmit,

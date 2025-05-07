@@ -1,6 +1,6 @@
 <template>
   <!-- Основной контейнер для уведомления -->
-  <div :class="[position, messageClass, message.fadingOut ? 'fade-out' : 'fade-in']" v-if="showMessage && message&& message.position === position">
+  <div :class="[position, messageClass, message.fadingOut ? 'fade-out' : 'fade-in']" v-if="showMessage && message && message.position === position">
     <!-- Контейнер для содержимого уведомления -->
     <div class="message-content">
       <!-- Иконка уведомления -->
@@ -49,6 +49,7 @@ export default {
       error: 'Ошибка!',
       warning: 'Внимание!'
     };
+
     const closeMessage = () => {
       store.dispatch('closeMessage', null, { root: true });
     };
@@ -61,7 +62,7 @@ export default {
       title,
       messageClass,
       closeMessage,
-      close: () => store.commit('clearMessage') // Вызываем мутацию закрытия сообщения
+      close: () => store.commit('clearMessage') // Мутация закрытия сообщения
     };
   },
 };
@@ -70,61 +71,61 @@ export default {
 <style>
 /* Основной контейнер для уведомления */
 .app-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   position: fixed; /* Фиксированное положение */
-  top: 20px; /* Отступ сверху */
-  right: 20px; /* Отступ справа */
-  padding: 15px; /* Внутренний отступ */
-  border-radius: 5px; /* Скругление углов */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */
-  display: flex; /* Флексбокс для выравнивания элементов */
-  align-items: center; /* Выравнивание по центру по вертикали */
-  justify-content: space-between; /* Равномерное распределение пространства между элементами */
-  animation: fadeIn 0.5s ease-in-out; /* Анимация появления */
-  width: 300px; /* Ширина контейнера */
+  top: 20px;
+  right: 20px;
+  padding: 15px;
+  border-radius: 5px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
   z-index: 9999;
 }
 
 /* Стили для уведомления об ошибке */
 .app-message.error, .app-message-profile.error {
-  background-color: #f8d7da; /* Цвет фона */
-  border-left: 5px solid #dc3545; /* Цвет и ширина левой границы */
-  color: #721c24; /* Цвет текста */
+  background-color: #f8d7da;
+  border-left: 5px solid #dc3545;
+  color: #721c24;
 }
 
 /* Стили для успешного уведомления */
 .app-message.success, .app-message-profile.success {
-  background-color: #d4edda; /* Цвет фона */
-  border-left: 5px solid #28a745; /* Цвет и ширина левой границы */
-  color: #155724; /* Цвет текста */
+  background-color: #d4edda;
+  border-left: 5px solid #28a745;
+  color: #155724;
 }
 
 /* Стили для предупреждающего уведомления */
 .app-message.warning, .app-message-profile.warning {
-  background-color: #fff3cd; /* Цвет фона */
-  border-left: 5px solid #ffc107; /* Цвет и ширина левой границы */
-  color: #856404; /* Цвет текста */
+  background-color: #fff3cd;
+  border-left: 5px solid #ffc107;
+  color: #856404;
 }
 
 /* Контейнер для содержимого уведомления */
 .message-content {
-  display: block; /* Флексбокс для выравнивания элементов */
-  align-items: center; /* Выравнивание по центру по вертикали */
+  display: block;
+  align-items: center;
 }
 
 /* Иконка уведомления (может быть добавлена позже) */
 .message-icon {
-  margin-right: 10px; /* Отступ справа */
+  margin-right: 10px;
 }
 
 /* Кнопка закрытия уведомления */
 .close-button {
   position: absolute; /*Абсолютное позиционирование крестика относительно уведомления*/
-  right: 2%; /* Отступ справа */
-  top: 10%; /* Отступ сверху */
-  background: none; /* Прозрачный фон */
-  border: none; /* Без границ */
-  font-size: 17px; /* Размер шрифта */
-  cursor: pointer; /* Курсор в виде руки при наведении */
+  right: 2%;
+  top: 10%;
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
   color: inherit; /* Цвет текста наследуется от родителя */
 }
 

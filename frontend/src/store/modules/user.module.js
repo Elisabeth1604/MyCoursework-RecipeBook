@@ -68,6 +68,12 @@ export default {
         async updateUser({ commit, rootState }, formData) {
             const token = rootState.auth.token; // Берем токен из auth модуля
 
+            // Проверка: есть ли хотя бы одно поле в formData
+            if (![...formData.entries()].length) {
+                console.warn("Пустая форма — запрос не отправлен.");
+                return;
+            }
+
             try {
                 //console.log("Отправляемые данные:", formData);
                 const response = await axios.put(`${API_URL}user/`, formData, {
@@ -112,6 +118,21 @@ export default {
             } catch (error) {
                 throw new Error('Ошибка загрузки пользователя');
             }
+        },
+
+        async fetchUserComments({ }, userId) {
+            try {
+                const response = await axios.get(`${API_URL}user/${userId}/comments/`,{
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('jwt-token')}`
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Ошибка загрузки комментариев:', error);
+                return [];
+            }
         }
+
     },
 };
