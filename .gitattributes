@@ -1,4 +1,5 @@
-*.vue linguist-language=Vue
-*.js linguist-language=JavaScript
-*.css linguist-language=CSS
-frontend/* linguist-detectable
+* linguist-vendored
+*.vue linguist-vendored=false linguist-language=Vue
+frontend/**/*.js linguist-vendored=false linguist-language=JavaScript
+frontend/**/*.css linguist-vendored=false linguist-language=CSS
+backend/django/recipebook/**/*.py linguist-vendored=false linguist-language=Python
