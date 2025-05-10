@@ -16,7 +16,7 @@ const routes = [
     name: 'AddRecipe',   
     component: () => import('../views/AddRecipe.vue'), // Ленивая загрузка компонента добавления рецепта (только когда он нужен)
     meta:{
-      layout: 'add-recipe', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'add-recipe'
+      layout: 'common-form', // Дополнительные метаданные для маршрута. Этот маршрут использует layout 'common-form'
       auth: true
     }
   },
@@ -26,7 +26,7 @@ const routes = [
     name: 'Reg',
     component: () => import('../views/Reg.vue'),
     meta:{
-      layout: 'reg'
+      layout: 'common-form'
     }
   },
   { // Доступен без авторизации (страница рецепта)
@@ -34,7 +34,7 @@ const routes = [
     name: 'RecipePage',
     component: () => import('../views/RecipePage.vue'),
     meta:{
-      layout: 'recipe-page'
+      layout: 'main'
     }
   },
   { // Доступен с авторизацией (избранное)
@@ -42,7 +42,7 @@ const routes = [
     name: 'Favourite',
     component: () => import('../views/Favourite.vue'),
     meta:{
-      layout: 'favourite',
+      layout: 'main',
       auth: true
     }
   },
@@ -51,7 +51,7 @@ const routes = [
     name: 'Profile',
     component: () => import('../views/Profile.vue'),
     meta:{
-      layout: 'profile',
+      layout: 'main',
     }
   },
   { // Доступен с авторизацией (свой профиль)
@@ -59,7 +59,7 @@ const routes = [
     name: 'MyProfile',
     component: () => import('../views/Profile.vue'),
     meta:{
-      layout: 'profile',
+      layout: 'main',
       auth: true
     }
   },
@@ -68,7 +68,7 @@ const routes = [
     name: 'MyRecipes',
     component: () => import('../views/MyRecipes.vue'),
     meta:{
-      layout: 'my-recipes',
+      layout: 'main',
       auth: true
     }
   },
@@ -77,7 +77,7 @@ const routes = [
     name: 'EditRecipe',
     component: () => import('@/views/EditRecipe.vue'),
     meta: {
-      layout: 'add-recipe',
+      layout: 'common-form',
       auth: true
     }
   },

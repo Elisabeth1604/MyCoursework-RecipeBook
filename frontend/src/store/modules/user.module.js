@@ -75,14 +75,13 @@ export default {
             }
 
             try {
-                //console.log("Отправляемые данные:", formData);
                 const response = await axios.put(`${API_URL}user/`, formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                commit("setUser", response.data); // Обновляем данные пользователя в store
+                commit("setUser", response.data); // Обновление данных пользователя в store
             } catch (error) {
                 console.error("Ошибка при обновлении профиля:", error);
                 throw error;
@@ -90,7 +89,7 @@ export default {
         },
 
         logoutUser({ commit }) {
-            commit("clearUser"); // Чистим данные пользователя при выходе
+            commit("clearUser");
         },
 
         async subscribe({ commit }, userId) {
@@ -133,6 +132,5 @@ export default {
                 return [];
             }
         }
-
     },
 };

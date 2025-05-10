@@ -1,6 +1,6 @@
 <template>
   <the-header/>
-  <!-- Поместила в класс container из AppAddRecipe для единого стиля -->
+  <!-- Поместила в класс container из AppAddRecipe для единого стиля страниц с формами регистрации и добавления рецепта-->
   <div class="container">
     <router-view/>
   </div>

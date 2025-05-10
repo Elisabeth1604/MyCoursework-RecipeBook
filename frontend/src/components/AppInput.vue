@@ -33,7 +33,7 @@
 import focusDirective from '@/directives/focusDirective';
 
 export default {
-  // Компонент может вызывать событие update:value
+  // Компонент может вызывать события update:value и blur
   emits:['update:modelValue', 'blur'],
   props: {
     label: String,
@@ -62,6 +62,7 @@ export default {
       //обновляем значение в родительском компоненте при изменении данных в дочернем компоненте
     },
     handleBlur() {
+      // Эмитим, то есть сообщаем родителю о DOM-событии потери фокуса, что нужно запустить валидацию
       this.$emit('blur');
     },
   },

@@ -33,13 +33,14 @@ export default {
 
     state(){
         return{
-            token: localStorage.getItem(TOKEN_KEY), // По токену будем определять, авторизован ли человек, причем начальное значение указываем не null, а получаем из localStorage
+            // По токену будем определять, авторизован ли человек, причем начальное значение указываем не null, а получаем из localStorage
+            token: localStorage.getItem(TOKEN_KEY),
             // чтобы при обновлении страницы авторизация не сбрасывалась
             isLoginVisible: false
         }
     },
 
-    mutations:{ // Здесь асинхронный код, изменяющий state
+    mutations:{ // Здесь синхронный код, изменяющий state
         setToken(state, token){
             state.token = token
             localStorage.setItem(TOKEN_KEY, token)
@@ -190,5 +191,4 @@ export default {
             return !!getters.token // Двойным отрицанием приводим токен к булевому значению, чтобы в зависимости от его значения возвращать состояние isAuthenticated
         }
     }
-
 }

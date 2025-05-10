@@ -19,7 +19,6 @@ import {defineComponent, ref} from 'vue'
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
 import AppButton from './AppButton.vue';
-import router from "@/router/router";
 
 export default defineComponent({
   setup() {
@@ -55,7 +54,7 @@ export default defineComponent({
 })
 </script>
 
-<style>
+<style scoped>
 .search-form {
   display: flex;
   align-items: center;

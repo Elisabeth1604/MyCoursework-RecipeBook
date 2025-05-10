@@ -18,7 +18,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Alice&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Serif+Display:ital@0;1&family=Macondo&family=Mate:ital@0;1&display=swap');
 header {
   position: fixed;
   top: 0;
