@@ -86,7 +86,8 @@ export default defineComponent({
     const togglePasswordVisibility = () => {
       isPasswordVisible.value = !isPasswordVisible.value;
     }
-    return{ ...UseLoginForm(), // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику туда
+    return{
+      ...UseLoginForm(), // Хук, возвращает объект, поэтому пользуемся оператором разворачивания, перенесла всю логику туда
       togglePasswordVisibility,
       closeModal,
       resetForm,

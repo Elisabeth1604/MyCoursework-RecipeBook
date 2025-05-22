@@ -2,9 +2,14 @@
   <div class="step">
     <label class="label-step">Шаг {{ index + 1 }}</label>
      <!-- Модальное окно для увеличенного изображения шага -->
-     <ImageModal :imageUrl="selectedImage" :visible="isModalVisible" @close="isModalVisible = false" />
+     <ImageModal :imageUrl="selectedImage"
+                 :visible="isModalVisible"
+                 @close="isModalVisible = false" />
     <!-- Изображение шага с обработчиком клика -->
-    <img :src="step.photo ? `${mediaUrl}${step.photo}`: require('@/assets/images/fallback.jpg')" alt="Фото шага" class="step-image" @click="openImage(step.photo)" />
+    <img :src="step.photo ? `${mediaUrl}${step.photo}`: require('@/assets/images/fallback.jpg')"
+         alt="Фото шага"
+         class="step-image"
+         @click="openImage(step.photo)" />
     <p class="step-description">{{ step.description }}</p>
   </div>
 </template>

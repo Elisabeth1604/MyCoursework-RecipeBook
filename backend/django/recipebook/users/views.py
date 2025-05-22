@@ -19,14 +19,18 @@ from django.http import JsonResponse
 
 from django.conf import settings
 
+# /api/user
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]  # Только для авторизованных пользователей
+    # Позволяет API понимать и обрабатывать форматы multipart/form-data, т.е. когда клиент отправляет не JSON,
+    # а файлы + текстовые поля (например, для загрузки аватара)
     parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         serializer = UserSerializer(request.user)  # Сериализуем данные пользователя
         return Response(serializer.data)
 
+    # Частичное обновление профиля
     def put(self, request):
         print("DEBUG: request.data =", request.data)
         print("DEBUG: request.FILES =", request.FILES)
@@ -37,17 +41,22 @@ class UserProfileView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# /api/user/<int:pk>/
+# Просмотр чужого профиля
 class UserDetailView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] # Для всех доступно
 
     def get(self, request, pk):
+        # Получаем активную модель пользователя, пытаемся найти пользователя с указанным pk, если не нашли - 404
         user = get_object_or_404(get_user_model(), pk=pk)
+        # context={'request': request} — это нужно, т к сериализатор строит абсолютные URL для аватара
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
+# /api/token/
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)  # Получаем стандартный ответ
+        response = super().post(request, *args, **kwargs)  # Получаем стандартный ответ через метод родительского класса
         refresh_token = response.data.pop('refresh', None)  # Удаляем refresh из JSON
         access_token = response.data['access']  # Достаем access
 
@@ -55,16 +64,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            httponly=True,
-            samesite="Lax",
+            httponly=True, # защищает от XSS
+            samesite="Lax", # cookie отправляется с безопасных кросс-доменных переходов
             domain="localhost",
-            secure=settings.DEBUG is False,
-            max_age=60 * 60 * 24 * 7  # 7 дней
+            secure=settings.DEBUG is False, # включает https только если DEBUG = False
+            max_age=60 * 60 * 24 * 7  # 7 дней время жизни
         )
 
         return response
 
-
+# /api/token/refresh/
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
@@ -73,38 +82,43 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"detail": "Refresh-токен отсутствует"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Создаем новый access-токен
             token = RefreshToken(refresh_token)
             access_token = str(token.access_token)
             return Response({"access": access_token})
         except Exception:
             return Response({"detail": "Refresh-токен недействителен"}, status=status.HTTP_400_BAD_REQUEST)
 
+# Преобразуем функцию в APIView, чтобы можно было возвращать Response(...), а не HttpResponse, разрешен только Post
+# /api/logout/
 @api_view(["POST"])
 def logout_view(request):
-    """Выход из системы: удаление refresh-токена из Cookie"""
     response = Response({"detail": "Вы вышли из системы"}, status=status.HTTP_200_OK)
-    response.delete_cookie("refresh_token")  # Удаляем refresh-токен из Cookie
+    # Удаление refresh-токена из cookie
+    response.delete_cookie("refresh_token")
     return response
 
+# Получить текущую кастомную модель пользователя, зарегистрированную в настройках Django
 User = get_user_model()
 
+# /api/register/
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] # Доступен любому пользователю, даже неавторизованному
     serializer_class = RegisterSerializer
 
-
+# /api/password/change/
 class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated] # Только авторизованный пользователь
 
     def post(self, request):
         try:
-            print("Request data:", request.data)  # Логируем данные запроса
-            serializer = ChangePasswordSerializer(data=request.data)
+            print("Request data:", request.data)
+            serializer = ChangePasswordSerializer(data=request.data) # Создаем объект сериализатора
             if serializer.is_valid():
                 user = request.user
                 print("Validated data:", serializer.validated_data)
-                # Проверка старого пароля
+                # Встроенный в Django способ проверить, соответствует ли введённый старый пароль хэшированному значению в БД
                 if not user.check_password(serializer.validated_data['old_password']):
                     return Response(
                         {"old_password": "Неверный пароль"},
@@ -118,7 +132,7 @@ class ChangePasswordView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# /api/user/favourites/
 class FavouriteRecipeListView(generics.ListAPIView):
     serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticated]
@@ -126,10 +140,10 @@ class FavouriteRecipeListView(generics.ListAPIView):
     search_fields = ['recipe_title', 'recipeingredient__ingredient__ingredient_name', 'category__category_name']
 
     def get_queryset(self):
-        # Получаем избранные рецепты текущего пользователя
+        # Получить избранные рецепты текущего пользователя
         favourite_recipes = Favourite.objects.filter(user=self.request.user).values_list('recipe_id', flat=True)
 
-        # Создаем базовый queryset с префетчами для оптимизации
+        # Базовый queryset с префетчами для оптимизации
         queryset = Recipe.objects.filter(id__in=favourite_recipes).prefetch_related(
             'recipeingredient_set__ingredient',
             'category'

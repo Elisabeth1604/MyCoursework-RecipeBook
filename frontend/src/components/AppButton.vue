@@ -1,7 +1,7 @@
 <template>
   <!-- Кнопка, которая генерирует событие action при нажатии и принимает текст и иконку
    через слот и стили через пропсы -->
-  <button @click="$emit('action')"
+  <button @click.stop="$emit('action')"
           :class="[buttonClass, { 'disabled': Disabled }]"
           :disabled="Disabled">
           <slot name="icon" />

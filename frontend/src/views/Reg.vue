@@ -164,10 +164,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.form-group {
-  display: block;
-  margin-bottom: 20px;
-}
 .reg-form{
   box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
   width: 100%;

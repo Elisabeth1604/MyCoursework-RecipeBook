@@ -1,14 +1,18 @@
 <template>
-  <div :class="['recipe-card', { expanded: isExpanded }]" @click="handleCardClick" title="При нажатии откроется страница рецепта">
-    <button
+  <div :class="['recipe-card', { expanded: isExpanded }]"
+       @click="handleCardClick"
+       title="При нажатии откроется страница рецепта">
+    <app-button
         v-if="mode === 'my'"
         title = "Удалить"
-        class="delete-btn"
-        @click.stop="confirmDelete"
+        buttonClass="delete-btn"
+        @action="confirmDelete"
     >
       ✖
-    </button>
-    <img class="recipe-card-img"  :src="recipeImage ? `${mediaUrl}${recipeImage}` : require('@/assets/images/fallback.jpg')" alt="Фото рецепта" />
+    </app-button>
+    <img class="recipe-card-img"
+         :src="recipeImage ? `${mediaUrl}${recipeImage}` : require('@/assets/images/fallback.jpg')"
+         alt="Фото рецепта" />
     <div class="recipe-header">
       <div class="kkal" title="Количество калорий на 100 грамм">
         <img class="kkal-img" :src="require('@/assets/icons/kcal.png')" />
@@ -25,14 +29,14 @@
     <div class="card-footer">
       <app-button
           v-if="!isExpanded"
-          @click.stop="toggleCard"
           buttonClass="ingredients-button"
           title="Развернуть карточку"
+          @action="toggleCard"
           small>Состав</app-button>
-      <button
+      <app-button
           v-if="mode !== 'my' && !isExpanded"
-          class="favorite-btn"
-          @click.stop="addToFavourites(recipeId)"
+          buttonClass="favorite-btn"
+          @action="addToFavourites(recipeId)"
           :title="isFavourite ? 'Удалить из избранного' : 'Добавить в избранное'">
         <img
             class="favourites-img"
@@ -41,12 +45,12 @@
                   : require('@/assets/icons/favourite.png')"
             :alt="isFavourite ? 'Удалить из избранного' : 'Добавить в избранное'"
         />
-      </button>
-      <button
+      </app-button>
+      <app-button
           v-if="mode === 'my'&& !isExpanded"
-          @click.stop="editRecipe()"
+          @action="editRecipe()"
           title="Редактировать рецепт"
-      >Редактировать</button>
+      >Редактировать</app-button>
     </div>
 
     <div v-if="isExpanded" class="card-ingredients">
@@ -56,8 +60,11 @@
           <li v-for="item in ingredients" :key="item.ingredient.ingredient_name">{{ item.ingredient.ingredient_name }}</li>
         </ul>
       </div>
-      <app-button @click.stop="viewRecipe(recipeId)" buttonClass="recipe-card-button">Показать рецепт</app-button>
-      <app-button @click.stop="toggleCard" buttonClass="recipe-card-button" small>Свернуть</app-button>
+      <app-button @action="viewRecipe(recipeId)"
+                  buttonClass="recipe-card-button">Показать рецепт</app-button>
+      <app-button @action="toggleCard"
+                  buttonClass="recipe-card-button"
+                  small>Свернуть</app-button>
     </div>
   </div>
 </template>

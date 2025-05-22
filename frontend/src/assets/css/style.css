@@ -125,6 +125,71 @@ label{
     box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
 }
 
+.form-group {
+    display: block;
+    margin-bottom: 20px;
+}
+
+/* Другой стиль для формы ввода ингредиента и количества */
+.form-group-ingredients {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Другие стили для label Ингредиент №, Количество и Единица измерения */
+.form-group-ingredients label, .unit-select-label{
+    font-size: 14px;
+    font-weight: 1px;
+    font-family: monospace;
+}
+
+/* Класс для инпутов (кроме ингредиентов) */
+.add-recipe-form{
+    box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Классы для поля ввода названия ингредиента, количества, единиц измерения и категории */
+.ingredient-input, .quantity-input, .unit-select {
+    height: 30px;
+    padding: 7px 10px 7px 7px;
+    margin-right: 10px;
+    box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+
+.form-group-prep-time {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.time-inputs {
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+.prep-time-input {
+    width: 70px; /* Ширина полей для часов и минут */
+    height: 25px;
+    margin-right: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.time-label {
+    margin-right: 20px; /* Отступы между полями и текстовыми метками */
+    font-size: 14px;
+    color: #333;
+}
+
 @media (max-width: 480px) {
     p {
         font-size: 13px;

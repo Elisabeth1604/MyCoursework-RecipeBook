@@ -1,7 +1,7 @@
 <template>
-  <!--Форма для добавления или редактирования рецепта, используется в соответствующих компонентах-->
+  <!--Форма для добавления или редактирования рецепта, используется в соответствующих компонентах
+  Отправка с предотвращением стандартной перезагрузки страницы .prevent-->
   <form @submit.prevent="submitRecipe">
-
     <!-- Название рецепта -->
     <app-input
         label="Название рецепта"
@@ -15,7 +15,6 @@
         @blur="rtBlur"
         required
     />
-
     <!-- Краткое описание -->
     <app-input
         label="Краткое описание"
@@ -29,7 +28,6 @@
         @blur="descBlur"
         required
     />
-
     <!-- Главное фото -->
     <app-input
         label="Загрузите изображение блюда"
@@ -47,7 +45,6 @@
         class="avatar-preview"
         alt="Предпросмотр главного фото"
     />
-
     <!-- Ингредиенты -->
     <label class="label-steps">Добавьте ингредиенты</label>
     <div class="inform-case">
@@ -84,7 +81,6 @@
             </li>
           </ul>
         </div>
-
         <!-- Количество -->
         <app-input
             label="Количество"
@@ -93,7 +89,6 @@
             type="number"
             input-class="quantity-input"
         ></app-input>
-
         <!-- Селект единиц -->
         <!-- Выпадающий список выбора единиц измерения -->
         <div class="form-group-ingredients">
@@ -104,7 +99,6 @@
             </option>
           </select>
         </div>
-
         <app-button
             button-class="remove-ingredient"
             @click.stop="removeIngredient(index)"
@@ -117,7 +111,6 @@
           @action="addIngredient"
       >Добавить ингредиент</app-button>
     </div>
-
     <!-- Порции + Время приготовления -->
     <div class="servings-time-container">
       <app-input
@@ -132,11 +125,9 @@
           placeholder="Количество порций"
           required
       ></app-input>
-
       <div class="form-group-prep-time">
         <!-- Основное название для группы полей времени приготовления -->
         <label>Время приготовления</label>
-
         <div class="time-inputs">
           <!-- Поле для ввода количества часов -->
           <app-input
@@ -149,7 +140,6 @@
               v-model.number="localRecipe.prep_time_hour"
           ></app-input>
           <span class="time-label">час(ов)</span>
-
           <!-- Поле для ввода количества минут -->
           <app-input
               label=""
@@ -164,7 +154,6 @@
         </div>
       </div>
     </div>
-
     <!-- Выпадающий список выбора категории блюда -->
     <div class="form-group">
       <label class="categories-select-label">Категория блюда</label>
@@ -176,7 +165,6 @@
       </select>
       <small class="validation-message" v-if="catDisplayError">{{ catDisplayError }}</small>
     </div>
-
     <!-- Шаги -->
     <label class="label-steps">Шаги приготовления</label>
     <div class="inform-case">
@@ -191,12 +179,10 @@
                   placeholder="Опишите этот шаг" required></textarea>
         <label>Загрузите изображение для этого шага:</label>
         <input type="file" @change="handleStepImageUpload($event, index)">
-
         <app-button
             button-class="remove-step"
             @action="removeStep(index)"
         >Удалить шаг</app-button>
-
         <div v-if="stepPreviews[index]" class="step-preview-container">
           <img
               :src="stepPreviews[index]"
@@ -205,22 +191,22 @@
           />
         </div>
       </div>
-
       <app-button
           button-class="add-step-btn"
           type="button"
           @action="addStep"
       >Добавить шаг</app-button>
     </div>
-
     <!-- Публичность -->
     <label class="is_public">
-      <input type="checkbox" class="checkbox-input" v-model="localRecipe.is_public" />
+      <input type="checkbox"
+             class="checkbox-input"
+             v-model="localRecipe.is_public" />
       Сделать рецепт общедоступным
     </label>
-
     <!-- Кнопка отправки -->
-    <app-button type="submit" button-class="submit-btn">{{ submitText }}</app-button>
+    <app-button type="submit"
+                button-class="submit-btn">{{ submitText }}</app-button>
   </form>
 </template>
 
@@ -228,7 +214,7 @@
 import {ref, watch, computed, reactive} from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/AppInput.vue';
-import { useAddRecipeForm } from '@/use/add-recipe-form'; // Твоя vee-validate логика
+import { useAddRecipeForm } from '@/use/add-recipe-form'; // vee-validate логика
 import axios from 'axios';
 import store from "@/store/store";
 
@@ -304,16 +290,21 @@ export default {
 
     const mediaUrl = computed(() => store.getters.mediaUrl);
 
-    // 💡 При первом монтировании (или при редактировании)
+    // При первом монтировании (или при редактировании)
+    // следит за изменением пропса modelValue,
+    // загружает его данные в валидируемые поля формы и
+    // локальное состояние localRecipe
     watch(
         () => props.modelValue,
         (newVal) => {
           if (!newVal) return;
+          // Заполняем валидируемые поля текущими значениями newVal
           recipe_title.value = newVal.recipe_title || '';
           description.value = newVal.description || '';
           servings.value = newVal.servings || '';
           category.value = typeof newVal.category === 'object' ? newVal.category.id : newVal.category;
 
+          // Теперь все остальные поля
           localRecipe.value = {
             ...localRecipe.value,
             ingredients: (newVal.ingredients || []).map(item => ({
@@ -330,6 +321,7 @@ export default {
             category: newVal.category,
           };
 
+          // Предпросмотры отображаем
           stepPreviews.value = localRecipe.value.steps.map(s => {
             if (!s.photo) return null;
             const isAbsolute = /^https?:\/\//.test(s.photo);
@@ -343,6 +335,8 @@ export default {
                 : new URL(localRecipe.value.main_photo, mediaUrl.value).href;
           }
         },
+        // immediate: true гарантирует, что этот код отработает сразу при первом монтировании компонента,
+        // даже если modelValue не менялся
         { immediate: true }
     );
 
@@ -351,25 +345,7 @@ export default {
       return match ? match.id : null;
     }
 
-    // Синхронизация vee-validate ↔ localRecipe
-    watch(recipe_title, val => localRecipe.value.recipe_title = val);
-    watch(() => localRecipe.value.recipe_title, val => recipe_title.value = val);
-
-    watch(description, val => localRecipe.value.description = val);
-    watch(() => localRecipe.value.description, val => description.value = val);
-
-    watch(servings, val => localRecipe.value.servings = val);
-    watch(() => localRecipe.value.servings, val => servings.value = val);
-
-    watch(category, val => {
-      const match = props.categories.find(c => c.id === val || +c.id === +val);
-      localRecipe.value.category = match || val;
-    });
-    watch(() => localRecipe.value.category, val => {
-      category.value = typeof val === 'object' ? val.id : val;
-    });
-
-    // ------------ ЛОГИКА РАБОТЫ С ФОТО ------------
+    // ЛОГИКА РАБОТЫ С ФОТО
     const handleImageUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -416,7 +392,7 @@ export default {
       }
     };
 
-    // ------------ ИНГРЕДИЕНТЫ ------------
+    // ИНГРЕДИЕНТЫ
     const addIngredient = () => {
       localRecipe.value.ingredients.push({
         ingredient: { id: null, ingredient_name: '' },
@@ -432,12 +408,15 @@ export default {
 
     // Поиск ингредиентов
     const onIngredientInput = async (index) => {
+      // Получение введённого пользователем значения ингредиента из поля ingredient_name
       const query = localRecipe.value.ingredients[index].ingredient.ingredient_name;
+      // Если поле пустое или менее 2 символов — не отправляем запрос и просто очищаем список подсказок
       if (!query || query.length < 2) {
         localRecipe.value.ingredients[index].suggestions = [];
         return;
       }
       try {
+        // Отправляем GET-запрос, передаём query как параметр
         const response = await axios.get('http://localhost/api/ingredients/', {
           params: { query },
         });
@@ -447,15 +426,18 @@ export default {
       }
     };
 
+    // Выбрали ингредиент из выпадающего списка
     const selectIngredient = (index, selectedItem) => {
+      // Присвоить id выбранного ингредиента
       localRecipe.value.ingredients[index].ingredient.id = selectedItem.id;
+      // Присвоить название ингредиента, чтобы отобразилось в поле ввода (взамен того, что ввёл пользователь)
       localRecipe.value.ingredients[index].ingredient.ingredient_name =
           selectedItem.ingredient_name;
+      // Очистить список подсказок, чтобы выпадающее меню исчезло после выбора
       localRecipe.value.ingredients[index].suggestions = [];
     };
 
-    // ------------ ШАГИ ------------
-
+    // ШАГИ (добавить и удалить)
     const addStep = async () => {
       localRecipe.value.steps.push({
         description: '',
@@ -467,8 +449,9 @@ export default {
       localRecipe.value.steps.splice(index, 1);
     };
 
-    // ------------ ОТПРАВКА ФОРМЫ ------------
+    // ОТПРАВКА ФОРМЫ
     function normalizeRecipe(recipe) {
+      // Здесь объединение валидируемых данных и localRecipe в один объект для отправки на сервер
       return {
         recipe_title: recipe_title.value,
         description: description.value,
@@ -515,7 +498,7 @@ export default {
     const submitRecipe = handleSubmit(async () => {
       // Эмитим событие submit родителю
       const cleanRecipe = normalizeRecipe(localRecipe.value);
-      console.log(cleanRecipe)
+
       emit('submit', cleanRecipe);
 
       if (!props.isEdit) {
@@ -570,48 +553,13 @@ export default {
 };
 </script>
 
-<style>
-.form-group {
-  display: block;
-  margin-bottom: 20px;
-}
-
-/* Другой стиль для формы ввода ингредиента и количества */
-.form-group-ingredients {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Другие стили для label Ингредиент №, Количество и Единица измерения */
-.form-group-ingredients label, .unit-select-label{
-  font-size: 14px;
-  font-weight: 1px;
-  font-family: monospace;
-}
-
-/* Класс для инпутов (кроме ингредиентов) */
-.add-recipe-form{
-  box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
+<style scoped>
+/* Удалить ингредиент */
 .remove-ingredient{
   margin-top: 15px;
 }
 
-/* Классы для поля ввода названия ингредиента, количества, единиц измерения и категории */
-.ingredient-input, .quantity-input, .unit-select {
-  height: 30px;
-  padding: 7px 10px 7px 7px;
-  margin-right: 10px;
-  box-sizing: border-box; /* по умолчанию стоит content-box, который не учитывает padding родителя*/
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
+/* Поле для выбора категории */
 .category-select{
   width: 40%;
   height: 35px;
@@ -672,33 +620,6 @@ export default {
   gap: 4%;
 }
 
-.form-group-prep-time {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-}
-
-.time-inputs {
-  display: flex;
-  align-items: center;
-  height: 50px;
-}
-
-.prep-time-input {
-  width: 70px; /* Ширина полей для часов и минут */
-  height: 25px;
-  margin-right: 5px;
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.time-label {
-  margin-right: 20px; /* Отступы между полями и текстовыми метками */
-  font-size: 14px;
-  color: #333;
-}
-
 .add-ingredient-btn {
   margin-top: 15px;
 }
@@ -719,16 +640,10 @@ export default {
   border-radius: 5px;
 }
 
-h2 {
-  text-align:start;
-  color: #333;
-}
-
 label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
-  color: #333;
 }
 
 .label-steps{
@@ -783,7 +698,6 @@ label {
   color: white;
   background-image: url("@/assets/icons/checkbox.png");
 }
-
 
 .step-preview-container {
   margin-top: 10px;

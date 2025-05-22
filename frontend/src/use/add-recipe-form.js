@@ -13,7 +13,6 @@ export function useAddRecipeForm() {
             .trim()
             .required('Название рецепта обязательно.'),
 
-
         description: yup.string()
             .trim()
             .required('Описание обязательно.'),
