@@ -18,7 +18,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     ingredient = IngredientSerializer()
-    # Используем StringRelatedField, чтобы вывести значение __str__ модели Unit (то есть unit_name)
+    #StringRelatedField, чтобы вывести значение __str__ модели Unit (то есть unit_name)
     unit = serializers.StringRelatedField()
 
     class Meta:
@@ -27,7 +27,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class StepSerializer(serializers.ModelSerializer):
     class Meta:
-        model = RecipeStep  # Убедись, что модель называется именно Step
+        model = RecipeStep
         fields = '__all__'
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
-    # Здесь предполагаем, что при создании мы передаём идентификаторы ингредиента и единицы измерения
+    # При создании передаём идентификаторы ингредиента и единицы измерения
     ingredient = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
     quantity = serializers.IntegerField(required=False, allow_null=True)
@@ -53,8 +53,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ['ingredient', 'quantity', 'unit']
 
     def to_internal_value(self, data):
-        """Обработка пустых строк до валидации полей"""
-        # Преобразуем '' в None для quantity
+        # Обработка пустых строк до валидации полей (преобразуем '' в None для quantity)
         if data.get('quantity') == '':
             data['quantity'] = None
         return super().to_internal_value(data)
@@ -92,7 +91,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        # Укажите те поля, которые будут передаваться при создании рецепта
+        # Поля, которые будут передаваться при создании рецепта
         fields = ['recipe_title', 'description', 'servings', 'prep_time_min', 'prep_time_hour',
                   'main_photo', 'category', 'ingredients', 'steps', 'is_public']
 
@@ -105,7 +104,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         # Предполагается, что в контексте сериализатора передается request
         user = self.context['request'].user
 
-        # Создаем объект рецепта
         recipe = Recipe.objects.create(user=user, **validated_data)
 
         # Создаем объекты RecipeIngredient, связывая их с созданным рецептом
@@ -117,7 +115,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 unit=ingredient_data.get('unit')
             )
 
-        # Создаем связанные записи шагов приготовления
+        # Связанные записи шагов приготовления
         for step_data in steps_data:
             RecipeStep.objects.create(recipe=recipe, **step_data)
 
@@ -132,15 +130,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # --- Обработка шагов --- #
+        # Обработка шагов
         existing_steps = list(instance.steps.all())
         new_steps = steps_data
 
-        # Обновляем существующие шаги
+        # Обновление существующих шагов
         for i, step_data in enumerate(new_steps):
             if i < len(existing_steps):
                 step = existing_steps[i]
-                # Если фото изменилось – удаляем старое
+                # Если фото изменилось, удаляем старое
                 if 'photo' in step_data and step.photo != step_data['photo']:
                     if step.photo:
                         relative_path = step.photo.replace(settings.MEDIA_URL, '') if step.photo.startswith(
@@ -158,7 +156,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 # Добавляем новый шаг
                 RecipeStep.objects.create(recipe=instance, **step_data)
 
-        # Удаляем лишние старые шаги
+        # Удалить лишние старые шаги
         if len(existing_steps) > len(new_steps):
             for step in existing_steps[len(new_steps):]:
                 if step.photo:
@@ -174,7 +172,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         instance.recipeingredient_set.all().delete()
 
-        # Создаём новые ингредиенты
+        # Новые ингредиенты
         for ingredient_data in ingredients_data:
             RecipeIngredient.objects.create(
                 recipe=instance,

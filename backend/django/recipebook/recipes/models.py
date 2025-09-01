@@ -7,7 +7,6 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-
 class Category(models.Model):
     category_name = models.CharField(max_length=45, unique=True)
 
@@ -80,7 +79,6 @@ class RecipeStep(models.Model):
 
     class Meta:
         db_table = 'recipe_steps'
-
 
 # Связь Рецепты - Ингредиенты (многие ко многим)
 class RecipeIngredient(models.Model):

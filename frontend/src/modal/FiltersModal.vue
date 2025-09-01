@@ -1,25 +1,18 @@
 <template>
-  <div class="modal-overlay" @click.self="closeModal">
-    <div class="modal-window">
-      <slot/>
+    <div class="modal-overlay"
+         @click.self="closeModal">
+        <div class="modal-window">
+            <slot/>
+        </div>
     </div>
-  </div>
 </template>
 
-<script>
-import { defineComponent } from "vue";
+<script setup>
 
-export default defineComponent({
-  emits:['close'],
-  setup(props, { emit }) {
-    const closeModal = () => {
-      emit('close');
-    };
-    return{
-      closeModal
-    }
-  }
-})
+const emit = defineEmits(['close']);
+const closeModal = () => {
+    emit('close');
+};
 </script>
 
 <style scoped>

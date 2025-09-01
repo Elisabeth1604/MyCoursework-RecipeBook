@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['date_joined']
 
         extra_kwargs = {
-            'username': {'required': False},  # Делаем необязательным при обновлении
+            'username': {'required': False},  # Не обязательное при обновлении
             'email': {'required': False},
         }
 
@@ -34,9 +34,9 @@ class UserSerializer(serializers.ModelSerializer):
     subscriptions = serializers.SerializerMethodField() # Подписки (список id)
 
     def get_avatar_url(self, obj):
-        """Возвращает путь к файлу внутри папки `media/` (без домена)"""
+        # возвращает путь к файлу внутри папки `media/` (без домена)
         if obj.avatar:
-            return obj.avatar.url  # Вернет "media/avatars/user5.jpg"
+            return obj.avatar.url
         return None
 
     def get_subscriptions(self, obj):
@@ -50,26 +50,25 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             # Если в запросе передано новое фото, обновляем его
             if 'avatar' in validated_data:
-                # Удаляем старое фото, если оно существует
+                # Удалить старое фото, если оно существует
                 if instance.avatar:
                     old_avatar_path = os.path.join(settings.MEDIA_ROOT, instance.avatar.name)
                     if os.path.exists(old_avatar_path):
                         os.remove(old_avatar_path)
-                # Сохраняем новое фото
+                # Сохранить новое фото
                 instance.avatar = validated_data['avatar']
 
-            # Обновляем username, только если оно передано и не пустое
+            # Обновляем username, если оно передано и не пустое
             if 'username' in validated_data and validated_data['username']:
                 instance.username = validated_data['username']
 
-            # Обновляем email, только если оно передано и не пустое
+            # Обновляем email, если оно передано и не пустое
             if 'email' in validated_data and validated_data['email']:
                 instance.email = validated_data['email']
 
             instance.save()
             return instance
         except Exception as e:
-            # Логируем ошибку и возвращаем её
             raise serializers.ValidationError({"error": str(e)})
 
 User = get_user_model()
@@ -143,5 +142,5 @@ class CommentWithRecipeSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'created_at', 'user', 'recipe']
 
     def get_recipe(self, obj):
-        from recipes.serializers import RecipeSerializer  # ← безопасный отложенный импорт
+        from recipes.serializers import RecipeSerializer  # безопасный отложенный импорт
         return RecipeSerializer(obj.recipe, context=self.context).data

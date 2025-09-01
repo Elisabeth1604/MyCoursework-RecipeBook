@@ -4,7 +4,6 @@ from django.dispatch import receiver
 from .models import RecipeIngredient, Recipe
 from django.conf import settings
 
-
 def calculate_nutrition_per_100(recipe):
     total_weight = 0.0
     total_calories = 0.0

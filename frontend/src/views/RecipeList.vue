@@ -1,136 +1,134 @@
+<!--Раздел Последние рецепты на главной RecipeList.vue с дочерним компонентом RecipeCard.vue-->
 <template>
-  <app-page title="Последние рецепты" filters> <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
-    <div class="recipes" ref="recipeGrid" v-if="publicRecipes && publicRecipes.length">
-      <recipe-card
-          v-for="item in publicRecipes"
-          :key="item.id"
-          :recipe-id="item.id"
-          :recipe-title="item.recipe_title"
-          :recipe-description="item.description"
-          :recipe-image="item.main_photo"
-          :prepTimeMin="item.prep_time_min"
-          :prepTimeHour="item.prep_time_hour"
-          :ingredients="item.ingredients"
-          :servings="item.servings"
-          :calories="item.calories_per_100"
-          :is-expanded="expandedCardId === item.id"
-          :is-public=true
-          @toggle-card="toggleCard(item.id)"
-      />
-    </div>
-    <!-- Если рецептов нет, например, по заданным фильтрам, выводим сообщение -->
-    <div v-else class="no-recipes">
-      <p>
-        Таких рецептов пока нет, ваш может
-        <router-link to="/add-recipe" class="link"> стать первым</router-link>!
-      </p>
-    </div>
-  </app-page>
+    <!-- Использую шаблон AppPage(название и контейнер для контента) для главной, избранного, профиля и моих рецептов-->
+    <AppPage title="Последние рецепты" filters>
+        <div v-if="publicRecipes && publicRecipes.length"
+             class="recipes"
+             ref="recipeGrid">
+            <AppRecipeCard
+                v-for="item in publicRecipes"
+                :key="item.id"
+                :recipe-id="item.id"
+                :recipe-title="item.recipe_title"
+                :recipe-description="item.description"
+                :recipe-image="item.main_photo"
+                :prepTimeMin="item.prep_time_min"
+                :prepTimeHour="item.prep_time_hour"
+                :ingredients="item.ingredients"
+                :servings="item.servings"
+                :calories="item.calories_per_100"
+                :is-expanded="expandedCardId === item.id"
+                :is-public="true"
+                @toggle-card="toggleCard(item.id)"
+            />
+        </div>
+
+        <div v-else
+             class="no-recipes">
+            <p>
+                Таких рецептов пока нет, ваш может
+                <RouterLink to="/add-recipe"
+                            class="link"> стать первым
+                </RouterLink>!
+            </p>
+        </div>
+    </AppPage>
 </template>
 
-<script>
-import {ref, onMounted, computed, watch} from 'vue';
-import {useStore} from 'vuex'
-import RecipeCard from '@/components/AppRecipeCard.vue';
-import AppPage from '@/components/ui/AppPage.vue';
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue';
+import { useStore } from 'vuex';
+import AppRecipeCard from '@/components/cards/AppRecipeCard.vue';
+import {
+    AppPage,
+} from '@ui';
 
-export default {
-  name: 'App',
-  setup() {
-    const expandedCardId = ref(null);
-    const store = useStore();
+defineOptions({
+    name: 'App',
+});
 
-    const recipes = computed(() => store.getters['recipe/allRecipes']);
+const expandedCardId = ref(null);
+const store = useStore();
 
-    const isAuth = computed(() => store.getters['auth/isAuthenticated']);
+const recipes = computed(() => store.getters['recipe/allRecipes']);
 
-    const publicRecipes = computed( () => {
-      return recipes.value.filter(recipe => recipe.is_public)
-    });
-   
-    const toggleCard = (id) => {
-      expandedCardId.value = expandedCardId.value === id ? null : id;
-    };
+const isAuth = computed(() => store.getters['auth/isAuthenticated']);
 
-    onMounted(() => {
-      store.dispatch('recipe/fetchRecipes');
-      if (isAuth.value) {
-        store.dispatch('recipe/fetchFavourites');
-      }
-    });
+const publicRecipes = computed( () => {
+    return recipes.value.filter(recipe => recipe.is_public);
+});
 
-    // Следим за изменением авторизации
-    watch(isAuth, (newVal) => {
-      store.dispatch('recipe/fetchRecipes')
-      if (newVal) {
-        store.dispatch('recipe/fetchFavourites')
-      } else {
-        store.commit('recipe/setFavourites', [])
-      }
-    })
-
-    return {
-      expandedCardId,
-      recipes,
-      publicRecipes,
-      toggleCard
-    };
-  },
-  components: {
-    RecipeCard,
-    AppPage
-  }
+const toggleCard = (id) => {
+    expandedCardId.value = expandedCardId.value === id ? null : id;
 };
+
+onMounted(() => {
+    store.dispatch('recipe/fetchRecipes');
+    if (isAuth.value) {
+        // Если выполнен вход, отображать рецепты, которые уже в избранном
+        store.dispatch('recipe/fetchFavourites');
+    }
+});
+
+// Следим за изменением авторизации (если пользователь войдет в профиль, сразу отметить избранные рецепты)
+watch(isAuth, (newVal) => {
+    store.dispatch('recipe/fetchRecipes');
+    if (newVal) {
+        store.dispatch('recipe/fetchFavourites');
+    } else {
+        store.commit('recipe/setFavourites', []);
+    }
+});
 </script>
 
 <style>
 .recipe-list {
-  padding: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+    max-width: 1200px;
+    padding: 40px;
+    margin: 0 auto;
 }
 
 .recipes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  align-items: start; /* Все карточки выравниваются по верхней границе */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: start;
 }
 
 .no-recipes {
-  text-align: center;
-  margin-top: 40px;
-  font-size: 16px;
+    margin-top: 40px;
+
+    text-align: center;
+    font-size: 16px;
 }
 
 .link{
-  display: inline-block;
-  margin-top: 5px;
-  color:rgb(83, 127, 163);
-  text-decoration-line: none;
-  border-bottom: 1px solid;
+    display: inline-block;
+    margin-top: 5px;
+
+    color:rgb(83, 127, 163);
+    text-decoration-line: none;
+
+    border-bottom: 1px solid;
 }
 
-/* Цвет при наведении на ссылку */
 .link:hover, .link:hover {
-  color: #FF9973;
-}
-/* Цвет при нажатии на ссылку */
-.link:active, .link:active {
-  color: #fc511c;
+    color: #FF9973;
 }
 
-/* адаптивность */
+.link:active, .link:active {
+    color: #fc511c;
+}
+
 @media (max-width: 1024px) {
-  .recipes {
-    grid-template-columns: repeat(2, 1fr); /* Два столбца при ширине экрана меньше 1024px */
-  }
+    .recipes {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
-  .recipes {
-    grid-template-columns: 1fr; /* Один столбец при ширине экрана меньше 768px */
-  }
+    .recipes {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
-

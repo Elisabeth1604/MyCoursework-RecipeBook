@@ -1,14 +1,15 @@
-import axios from "axios";
+import axios from 'axios';
 
 const API_URL = 'http://127.0.0.1:8000/api/';
+
 export default {
     namespaced: true,
     state: {
         user: {
             id: null,
-            username: "",
-            email: "",
-            avatar: "", // URL для аватара пользователя
+            username: '',
+            email: '',
+            avatar: '', // URL для аватара пользователя
             date_joined: '',
             followers: [], // Подписчики
             subscriptions: [], // Подписки
@@ -17,8 +18,8 @@ export default {
     getters: {
         user: (state) => state.user,
         isSubscriber: (state) => (userId) => {
-            return state.user.subscriptions.includes(userId) // Подписан я на пользователя userId или нет
-        }
+            return state.user.subscriptions.includes(userId); // Подписан я на пользователя userId или нет
+        },
     },
     mutations: {
         setUser(state, userData) {
@@ -27,9 +28,9 @@ export default {
         clearUser(state) {
             state.user = {
                 id: null,
-                username: "",
-                email: "",
-                avatar: "",
+                username: '',
+                email: '',
+                avatar: '',
                 date_joined: '',
                 followers: [],
                 subscriptions: [],
@@ -42,14 +43,14 @@ export default {
         },
         removeSubscription (state, userId) {
             state.user.subscriptions = state.user.subscriptions.filter(id => id !== userId);
-        }
+        },
     },
     actions: {
         async fetchUser({ commit, rootState }) {
-            const token = rootState.auth.token; // Берем токен из auth модуля
+            const token = rootState.auth.token;
 
             if (!token) {
-                console.warn("Попытка загрузки профиля без авторизации.");
+                console.warn('Попытка загрузки профиля без авторизации.');
                 return;
             }
 
@@ -59,44 +60,45 @@ export default {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                commit("setUser", response.data); // Сохраняем данные пользователя
+
+                commit('setUser', response.data);
             } catch (error) {
-                console.error("Ошибка загрузки пользователя:", error.response ? error.response.data : error);
+                console.error('Ошибка загрузки пользователя:', error.response ? error.response.data : error);
             }
         },
 
         async updateUser({ commit, rootState }, formData) {
-            const token = rootState.auth.token; // Берем токен из auth модуля
+            const token = rootState.auth.token;
 
-            // Проверка: есть ли хотя бы одно поле в formData
             if (![...formData.entries()].length) {
-                console.warn("Пустая форма — запрос не отправлен.");
+                console.warn('Пустая форма — запрос не отправлен.');
                 return;
             }
 
             try {
                 const response = await axios.put(`${API_URL}user/`, formData, {
                     headers: {
-                        "Content-Type": "multipart/form-data",
+                        'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                commit("setUser", response.data); // Обновление данных пользователя в store
+
+                commit('setUser', response.data);
             } catch (error) {
-                console.error("Ошибка при обновлении профиля:", error);
+                console.error('Ошибка при обновлении профиля:', error);
                 throw error;
             }
         },
 
         logoutUser({ commit }) {
-            commit("clearUser");
+            commit('clearUser');
         },
 
         async subscribe({ commit }, userId) {
             try {
                 await axios.post(`${API_URL}subscriptions/${userId}/`);
                 commit('addSubscription', userId);
-            } catch (error) {
+            } catch {
                 throw new Error('Ошибка подписки');
             }
         },
@@ -105,7 +107,7 @@ export default {
             try {
                 await axios.delete(`${API_URL}subscriptions/${userId}/`);
                 commit('removeSubscription', userId);
-            } catch (error) {
+            } catch {
                 throw new Error('Ошибка отписки');
             }
         },
@@ -113,24 +115,25 @@ export default {
         async fetchUserById({ commit }, userId) {
             try {
                 const response = await axios.get(`${API_URL}user/${userId}/`);
-                return response.data; // Возвращаем данные пользователя
-            } catch (error) {
+                return response.data;
+            } catch {
                 throw new Error('Ошибка загрузки пользователя');
             }
         },
 
-        async fetchUserComments({ }, userId) {
+        async fetchUserComments({}, userId) {
             try {
                 const response = await axios.get(`${API_URL}user/${userId}/comments/`,{
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('jwt-token')}`
-                    }
+                        Authorization: `Bearer ${localStorage.getItem('jwt-token')}`,
+                    },
                 });
+
                 return response.data;
             } catch (error) {
                 console.error('Ошибка загрузки комментариев:', error);
                 return [];
             }
-        }
+        },
     },
 };

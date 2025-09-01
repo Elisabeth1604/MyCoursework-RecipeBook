@@ -1,6 +1,6 @@
-import { useField, useForm } from "vee-validate";
-import * as yup from "yup";
-import { computed, ref } from "vue";
+import { useField, useForm } from 'vee-validate';
+import * as yup from 'yup';
+import { computed, ref } from 'vue';
 
 export function useAddRecipeForm() {
     // Объект для ошибок, возвращаемых бэкендом, например, если recipe_title не уникален
@@ -19,7 +19,7 @@ export function useAddRecipeForm() {
 
         servings: yup.number()
             .min(1, 'Не менее 1.')
-            .typeError("Введите количество порций.")
+            .typeError('Введите количество порций.')
             .required('Введите количество порций.'),
 
         category: yup.string()
@@ -33,17 +33,17 @@ export function useAddRecipeForm() {
                     ingredient: yup
                         .string()
                         .trim()
-                        .required("Название обязательно."),
+                        .required('Название обязательно.'),
                     quantity: yup
                         .number()
-                        .min(0.1, "Отрицательное значение.")
-                        .required("Введите количество."),
+                        .min(0.1, 'Отрицательное значение.')
+                        .required('Введите количество.'),
                     unit: yup
                         .string()
-                        .required("Выберите единицу измерения."),
-                })
+                        .required('Выберите единицу измерения.'),
+                }),
             )
-            .min(1, "Добавьте хотя бы один ингредиент."),
+            .min(1, 'Добавьте хотя бы один ингредиент.'),
 
         steps: yup
             .array()
@@ -52,14 +52,14 @@ export function useAddRecipeForm() {
                     description: yup
                         .string()
                         .trim()
-                        .required("Описание шага обязательно."),
-                })
+                        .required('Описание шага обязательно.'),
+                }),
             )
-            .min(1, "Добавьте хотя бы один шаг приготовления."),
+            .min(1, 'Добавьте хотя бы один шаг приготовления.'),
     });
 
     // Инициализируем форму с данной схемой
-    const { handleSubmit, isSubmitting, resetForm} = useForm({
+    const { handleSubmit, isSubmitting, resetForm } = useForm({
         validationSchema: schema,
     } );
 
@@ -77,7 +77,7 @@ export function useAddRecipeForm() {
         value: description,
         errorMessage: descError,
         handleBlur: descBlur,
-        meta: descMeta
+        meta: descMeta,
     } = useField('description', undefined);
 
     const descDisplayError = computed(() => descMeta.touched ? descError.value : '');
@@ -86,7 +86,7 @@ export function useAddRecipeForm() {
         value: servings,
         errorMessage: servError,
         handleBlur: servBlur,
-        meta: servMeta
+        meta: servMeta,
     } = useField('servings',undefined, {
         initialValue: null,
     });
@@ -97,9 +97,9 @@ export function useAddRecipeForm() {
         value: category,
         errorMessage: catError,
         handleBlur: catBlur,
-        meta: catMeta
+        meta: catMeta,
     } = useField('category', undefined, {
-        initialValue: ""
+        initialValue: '',
     });
 
     const catDisplayError = computed(() => catMeta.touched ? catError.value : '');
@@ -128,6 +128,6 @@ export function useAddRecipeForm() {
         isSubmitting,
         handleSubmit,
         backendErrors,
-        resetForm
+        resetForm,
     };
 }

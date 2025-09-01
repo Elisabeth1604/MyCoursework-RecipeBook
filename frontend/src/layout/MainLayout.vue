@@ -1,15 +1,10 @@
 <template>
-  <the-header/>
-  <router-view/>
-  <the-footer/>
+    <TheHeader/>
+    <RouterView/>
+    <TheFooter/>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
-import TheHeader from '@/components/TheHeader.vue';
-import TheFooter from '@/components/TheFooter.vue';
-
-export default defineComponent({
-  components: { TheHeader, TheFooter }
-})
+<script setup>
+import TheHeader from '@/components/layouts/TheHeader.vue';
+import TheFooter from '@/components/layouts/TheFooter.vue';
 </script>

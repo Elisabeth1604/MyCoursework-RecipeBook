@@ -15,6 +15,7 @@ import os
 Если используется форма фильтров, запрос отправляется на эндпоинт /api/recipes/filter/ с отдельными параметрами для категории, 
 ингредиентов и калорий. Врчуную применяются фильтры к queryset(RecipeFilterView)'''
 
+# /api/recipes/
 class RecipeListCreateView(generics.ListCreateAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
@@ -33,6 +34,7 @@ class RecipeListCreateView(generics.ListCreateAPIView):
             return RecipeCreateSerializer
         return RecipeSerializer
 
+# /api/recipes/<int:pk>/
 class RecipeDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
@@ -42,17 +44,19 @@ class RecipeDetailView(generics.RetrieveUpdateDestroyAPIView):
             return RecipeCreateSerializer
         return RecipeSerializer
 
-
+# /api/ingredients/
 class IngredientListView(generics.ListAPIView):
     serializer_class = IngredientSerializer
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         return Ingredient.objects.filter(ingredient_name__icontains=query)
 
+# /api/categories/
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+# /api/recipes/filter/
 class RecipeFilterView(generics.ListAPIView):
     serializer_class = RecipeSerializer
 
@@ -86,6 +90,7 @@ class RecipeFilterView(generics.ListAPIView):
 
         return queryset
 
+# /api/units/
 class UnitListView(generics.ListAPIView):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer

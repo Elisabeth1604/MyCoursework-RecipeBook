@@ -1,5 +1,5 @@
-import { useField, useForm } from "vee-validate";
-import * as yup from "yup";
+import { useField, useForm } from 'vee-validate';
+import * as yup from 'yup';
 
 export const caloriesFormSchema = yup.object({
     age: yup
@@ -22,12 +22,12 @@ export const caloriesFormSchema = yup.object({
         .transform(value => (isNaN(value) ? undefined : value))
         .required('Вес обязателен')
         .min(20, 'Минимальный вес — 20 кг')
-        .max(400, 'Максимальный вес — 400 кг')
+        .max(400, 'Максимальный вес — 400 кг'),
 });
 
 // Функция, которую можно использовать в компонентах
 export function useCaloriesForm() {
-    const { handleSubmit, errors } = useForm({
+    const { handleSubmit } = useForm({
         validationSchema: caloriesFormSchema,
     });
 
@@ -46,6 +46,6 @@ export function useCaloriesForm() {
         weightField,
         weightError,
         weightBlur,
-        handleSubmit
+        handleSubmit,
     };
 }

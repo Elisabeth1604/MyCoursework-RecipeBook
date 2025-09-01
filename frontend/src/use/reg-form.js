@@ -1,6 +1,6 @@
 import { useField, useForm } from 'vee-validate';
 import * as yup from 'yup';
-import { ref } from "vue";
+import { ref } from 'vue';
 
 export function useRegForm() {
     const PASSWORD_MIN_LENGTH = 8;
@@ -19,12 +19,12 @@ export function useRegForm() {
             .min(PASSWORD_MIN_LENGTH, `Минимум ${PASSWORD_MIN_LENGTH} символов.`)
             .matches(
                 /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                'Пароль должен состоять из цифр, заглавных и строчных латинских букв.'
+                'Пароль должен состоять из цифр, заглавных и строчных латинских букв.',
             ),
 
         confirmPassword: yup.string()
             .required('Обязательное поле.')
-            .oneOf([yup.ref('password')], 'Пароли не совпадают.')
+            .oneOf([yup.ref('password')], 'Пароли не совпадают.'),
     });
 
     const { handleSubmit, isSubmitting } = useForm({ validationSchema: schema } );
@@ -33,48 +33,45 @@ export function useRegForm() {
     const {
         value: usernameValue,
         errorMessage: usernameError,
-        handleBlur: usernameBlur
+        handleBlur: usernameBlur,
     } = useField('username');
 
     const {
         value: emailValue,
         errorMessage: emailError,
-        handleBlur: emailBlur
+        handleBlur: emailBlur,
     } = useField('email');
 
     const {
         value: passwordValue,
         errorMessage: passwordError,
-        handleBlur: passwordBlur
+        handleBlur: passwordBlur,
     } = useField('password');
 
     const {
         value: confirmPasswordValue,
         errorMessage: confirmPasswordError,
-        handleBlur: confirmPasswordBlur
+        handleBlur: confirmPasswordBlur,
     } = useField('confirmPassword');
 
     const backendErrors = ref({
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
     });
 
     return {
-        // Поля формы
         usernameValue,
         emailValue,
         passwordValue,
         confirmPasswordValue,
 
-        // Ошибки валидации
         usernameError,
         emailError,
         passwordError,
         confirmPasswordError,
 
-        // Обработчики
         usernameBlur,
         emailBlur,
         passwordBlur,

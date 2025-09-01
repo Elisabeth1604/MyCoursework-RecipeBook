@@ -56,11 +56,11 @@ class UserDetailView(APIView):
 # /api/token/
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)  # Получаем стандартный ответ через метод родительского класса
-        refresh_token = response.data.pop('refresh', None)  # Удаляем refresh из JSON
-        access_token = response.data['access']  # Достаем access
+        response = super().post(request, *args, **kwargs)
+        refresh_token = response.data.pop('refresh', None)
+        access_token = response.data['access']
 
-        # Устанавливаем refresh-токен в HttpOnly Cookie
+        # refresh-токен в HttpOnly Cookie
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
@@ -177,7 +177,7 @@ class FavouriteRecipeListView(generics.ListAPIView):
 
         return Response({'detail': 'Добавлен в избранное'}, status=201)
 
-
+# /api/subscriptions/
 class SubscriptionListView(generics.ListCreateAPIView):
     serializer_class = SubscriptionSerializer
     permission_classes = [IsAuthenticated]
@@ -188,6 +188,7 @@ class SubscriptionListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(subscriber=self.request.user)
 
+# /api/subscriptions/<int:user_id>/
 class SubscriptionActionsView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -217,7 +218,7 @@ class SubscriptionActionsView(generics.DestroyAPIView):
         except Subscription.DoesNotExist:
             return Response({"detail": "Подписка не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
-
+# /api/user/<int:user_id>/subscription-status/
 class SubscriptionStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -240,6 +241,7 @@ class SubscriptionStatusView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+# /api/recipes/<int:recipe_id>/comments/
 class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -252,7 +254,6 @@ class CommentListCreateView(generics.ListCreateAPIView):
         recipe_id = self.kwargs.get('recipe_id')
         serializer.save(user=self.request.user, recipe_id=recipe_id)
 
-
 class CommentDeleteView(generics.DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -264,6 +265,7 @@ class CommentDeleteView(generics.DestroyAPIView):
             return Response({'detail': 'Нельзя удалить чужой комментарий'}, status=status.HTTP_403_FORBIDDEN)
         return super().delete(request, *args, **kwargs)
 
+# /api/user/<int:user_id>/comments/
 class UserCommentListView(APIView):
     permission_classes = [IsAuthenticated]
 

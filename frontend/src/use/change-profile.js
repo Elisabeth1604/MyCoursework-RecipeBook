@@ -1,6 +1,6 @@
 import { useField, useForm } from 'vee-validate';
 import * as yup from 'yup';
-import { ref } from "vue";
+import { ref } from 'vue';
 import { useStore } from 'vuex';
 
 export function UseProfileChangeForm() {
@@ -14,7 +14,7 @@ export function UseProfileChangeForm() {
                 .when(['newPassword', 'confirmPassword'], {
                     is: (newPassword, confirmPassword) => newPassword || confirmPassword,
                     then: (schema) => schema.required('Старый пароль обязателен для изменения пароля.'),
-                    otherwise: (schema) => schema.notRequired() // Поле не обязательно, если newPassword и confirmPassword пустые
+                    otherwise: (schema) => schema.notRequired(), // Поле не обязательно, если newPassword и confirmPassword пустые
                 }),
 
             newPassword: yup.string()
@@ -23,7 +23,7 @@ export function UseProfileChangeForm() {
                 .min(PASSWORD_MIN_LENGTH, `Минимум ${PASSWORD_MIN_LENGTH} символов.`)
                 .matches(
                     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                    'Пароль должен состоять из цифр, заглавных и строчных латинских букв.'
+                    'Пароль должен состоять из цифр, заглавных и строчных латинских букв.',
                 )
                 .notRequired(), // Поле не обязательно
 
@@ -34,17 +34,17 @@ export function UseProfileChangeForm() {
                 .when('newPassword', {
                     is: (newPassword) => !!newPassword, // Проверяем, ввёл ли пользователь новый пароль
                     then: (schema) => schema.required('Подтвердите пароль'),
-                    otherwise: (schema) => schema.notRequired() // Поле не обязательно, если `newPassword` пустое
+                    otherwise: (schema) => schema.notRequired(), // Поле не обязательно, если `newPassword` пустое
                 }),
         }),
 
         initialValues: {
             newPassword: null,
             confirmPassword: null,
-            oldPassword: null
+            oldPassword: null,
         },
 
-        context: { values: { newPassword: null, confirmPassword: null, oldPassword: null } } // Явно передаем контекст
+        context: { values: { newPassword: null, confirmPassword: null, oldPassword: null } }, // Явно передаем контекст
     });
 
     const store = useStore();
@@ -57,7 +57,7 @@ export function UseProfileChangeForm() {
         yup
             .string()
             .trim()
-            .matches(/^[a-zA-Z0-9_-]+$/, 'Имя может состоять только из заглавных и строчных латинских букв, цифр, знаков _ и -.')
+            .matches(/^[a-zA-Z0-9_-]+$/, 'Имя может состоять только из заглавных и строчных латинских букв, цифр, знаков _ и -.'),
     );
 
     const { value: email, errorMessage: emailError, handleBlur: emailBlur } = useField(
@@ -65,21 +65,21 @@ export function UseProfileChangeForm() {
         yup
             .string()
             .trim()
-            .email('Некорректный email.')
+            .email('Некорректный email.'),
     );
 
     // Поля пароля
     const { value: oldPassword, errorMessage: oldPasswordError, handleBlur: oldPasswordBlur } = useField(
-        'oldPassword'
+        'oldPassword',
     );
 
 
     const { value: newPassword, errorMessage: newPasswordError, handleBlur: newPasswordBlur } = useField(
-        'newPassword'
+        'newPassword',
     );
 
     const { value: confirmPassword, errorMessage: confirmPasswordError, handleBlur: confirmPasswordBlur } = useField(
-        'confirmPassword'
+        'confirmPassword',
     );
 
     // Обработка файла аватара
@@ -116,7 +116,7 @@ export function UseProfileChangeForm() {
         oldPassword: '',
         newPassword: '',
         confirmPassword: '',
-        avatar: ''
+        avatar: '',
     });
 
     const onSubmit = handleSubmit(async (values) => {
@@ -127,19 +127,16 @@ export function UseProfileChangeForm() {
             // Добавляем только заполненные поля
             if (values.username) formData.append('username', values.username);
             if (values.email) formData.append('email', values.email);
-            console.log("avatar value:", avatar.value)
 
             if (avatar.value) formData.append('avatar', avatar.value);
 
-            // Обновляем профиль
             await store.dispatch('user/updateUser', formData);
 
-            // Если заполнены все поля пароля, меняем его
             if (values.oldPassword && values.newPassword && values.confirmPassword) {
                 await store.dispatch('auth/changePassword', {
                     oldPassword: values.oldPassword,
                     newPassword: values.newPassword,
-                    confirmPassword: values.confirmPassword
+                    confirmPassword: values.confirmPassword,
                 });
             }
 
@@ -154,17 +151,15 @@ export function UseProfileChangeForm() {
             confirmPassword.value = null;
 
             successMessage.value = 'Данные успешно обновлены!';
-            console.log(successMessage.value)
             error.value = null;
 
         } catch (error) {
-            console.log("DEBUG: Данные ответа:", error.response?.data);
             if (error.response?.data) {
                 // Обрабатываем ошибки валидации Django
                 const fieldMap = {
                     new_password: 'newPassword',
                     old_password: 'oldPassword',
-                    new_password2: 'confirmPassword'
+                    new_password2: 'confirmPassword',
                 };
 
                 for (const [field, messages] of Object.entries(error.response.data)) {
@@ -176,7 +171,7 @@ export function UseProfileChangeForm() {
                     }
                 }
             }
-            // Пробрасываем ошибку дальше, чтобы её можно было обработать в onEdit
+            // для обработки в onEdit
             throw error;
         }
     });
@@ -215,6 +210,6 @@ export function UseProfileChangeForm() {
         onSubmit,
         isSubmitting,
         error,
-        successMessage
+        successMessage,
     };
 }
